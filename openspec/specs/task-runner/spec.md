@@ -60,11 +60,11 @@ The Taskfile SHALL define a `migrate` task for running Atlas database migrations
 - **THEN** Atlas migrations run (or a stub message prints)
 
 ### Requirement: Dev task
-The Taskfile SHALL define a `dev` task that starts the local development environment.
+The Taskfile SHALL define a `dev` task that starts the local development environment by running `docker compose up`.
 
-#### Scenario: Dev task
+#### Scenario: Dev task starts compose services
 - **WHEN** a developer runs `task dev`
-- **THEN** the local dev environment starts (docker-compose up + servers) (or a stub message prints)
+- **THEN** `docker compose up` executes and all local dev services start
 
 ### Requirement: Stub behavior
 Any task that is not yet wired to real tooling SHALL print a descriptive message indicating it is not yet configured and what it will do when wired.
