@@ -76,9 +76,15 @@ tasks:
     cmd: echo "[generate:sqlc] Not yet configured — will run sqlc generate"
 
   # ── Database ───────────────────────────────────────────────
-  migrate:
-    desc: Run Atlas database migrations
-    cmd: echo "[migrate] Not yet configured — will run atlas migrate apply"
+  "migrate":
+    desc: Apply pending Atlas migrations
+    dir: backend
+    cmd: atlas migrate apply --env local
+
+  "migrate:diff":
+    desc: "Generate a new migration from schema.hcl diff (usage: task migrate:diff -- <name>)"
+    dir: backend
+    cmd: "atlas migrate diff {{.CLI_ARGS}} --env local"
 
   # ── Build ────────────────────────────────────────────────
   build:
