@@ -56,7 +56,7 @@ bartering-games/
 
 - **Readability over cleverness**, unless the performance benefit is significant
 - Go code follows standard Go conventions (gofmt, effective Go)
-- TypeScript uses Biome for linting + formatting
+- TypeScript uses ESLint + Prettier for linting + formatting
 - Go uses golangci-lint
 - Proto uses buf lint
 - Never log plaintext game keys, vault passphrases, or sensitive user data
