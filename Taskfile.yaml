@@ -80,6 +80,12 @@ tasks:
     desc: Run Atlas database migrations
     cmd: echo "[migrate] Not yet configured — will run atlas migrate apply"
 
+  # ── Build ────────────────────────────────────────────────
+  build:
+    desc: Build Go backend binary
+    dir: backend
+    cmd: go build -o bin/server ./cmd/server/
+
   # ── Development ────────────────────────────────────────────
   dev:
     desc: Start local development environment

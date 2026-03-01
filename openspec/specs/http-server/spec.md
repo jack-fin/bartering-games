@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Go module initialization
-The backend SHALL have a Go module at `backend/go.mod` with module path `github.com/jack-flores/bartering-games/backend` and Go version 1.26.
+The backend SHALL have a Go module at `backend/go.mod` with module path `github.com/jack-fin/bartering-games/backend` and Go version 1.26.
 
 #### Scenario: Module is valid
 - **WHEN** a developer runs `go mod verify` from the `backend/` directory
@@ -15,11 +15,15 @@ The server SHALL use `go-chi/chi/v5` as the HTTP router with the following middl
 - **THEN** it passes through RealIP, Logger, Recoverer, Compress, and CORS middleware before reaching the handler
 
 ### Requirement: Health endpoint
-The server SHALL expose a `GET /healthz` endpoint that returns HTTP 200 with a plain text body of `ok`.
+The server SHALL serve health checks via the Connect-based `HealthService` handler at the path returned by `NewHealthServiceHandler()`. The plain-text `GET /healthz` endpoint SHALL be removed.
 
-#### Scenario: Liveness check succeeds
+#### Scenario: Health check via Connect RPC
+- **WHEN** a client sends a Connect request to `/bartering.v1.HealthService/Check`
+- **THEN** the server responds with a `CheckResponse` containing the current serving status
+
+#### Scenario: Plain-text healthz is removed
 - **WHEN** a client sends `GET /healthz`
-- **THEN** the server responds with status 200 and body `ok`
+- **THEN** the server responds with 404
 
 ### Requirement: Readiness endpoint
 The server SHALL expose a `GET /readyz` endpoint that returns HTTP 200 with a plain text body of `ok`.
@@ -77,3 +81,10 @@ The server SHALL include CORS middleware configured to allow all origins by defa
 #### Scenario: CORS headers present
 - **WHEN** a client sends a preflight OPTIONS request
 - **THEN** the server responds with appropriate CORS headers (Access-Control-Allow-Origin, Access-Control-Allow-Methods, Access-Control-Allow-Headers)
+
+### Requirement: Connect handler integration with middleware
+Connect service handlers mounted via `r.Mount()` SHALL pass through the same Chi middleware stack (RealIP, Logger, Recoverer, Compress, CORS) as all other routes.
+
+#### Scenario: Middleware applies to Connect requests
+- **WHEN** a Connect RPC request is received
+- **THEN** it passes through the full middleware stack before reaching the Connect handler

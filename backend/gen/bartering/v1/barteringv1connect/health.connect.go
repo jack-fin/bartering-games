@@ -8,7 +8,7 @@ import (
 	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"
-	v1 "github.com/jack-flores/bartering-games/backend/gen/bartering/v1"
+	v1 "github.com/jack-fin/bartering-games/backend/gen/bartering/v1"
 	http "net/http"
 	strings "strings"
 )

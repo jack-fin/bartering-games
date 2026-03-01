@@ -166,7 +166,7 @@ const file_bartering_v1_health_proto_rawDesc = "" +
 	"\x16SERVING_STATUS_SERVING\x10\x01\x12\x1e\n" +
 	"\x1aSERVING_STATUS_NOT_SERVING\x10\x022S\n" +
 	"\rHealthService\x12B\n" +
-	"\x05Check\x12\x1a.bartering.v1.CheckRequest\x1a\x1b.bartering.v1.CheckResponse\"\x00BMZKgithub.com/jack-flores/bartering-games/backend/gen/bartering/v1;barteringv1b\x06proto3"
+	"\x05Check\x12\x1a.bartering.v1.CheckRequest\x1a\x1b.bartering.v1.CheckResponse\"\x00BJZHgithub.com/jack-fin/bartering-games/backend/gen/bartering/v1;barteringv1b\x06proto3"
 
 var (
 	file_bartering_v1_health_proto_rawDescOnce sync.Once

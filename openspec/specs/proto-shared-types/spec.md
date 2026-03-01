@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Common proto file exists
-The repository SHALL contain a `proto/bartering/v1/common.proto` file with package `bartering.v1` and Go package option set to `github.com/jack-flores/bartering-games/backend/gen/bartering/v1;barteringv1`.
+The repository SHALL contain a `proto/bartering/v1/common.proto` file with package `bartering.v1` and Go package option set to `github.com/jack-fin/bartering-games/backend/gen/bartering/v1;barteringv1`.
 
 #### Scenario: Package declaration
 - **WHEN** a developer inspects `proto/bartering/v1/common.proto`
