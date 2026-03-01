@@ -20,7 +20,8 @@ tasks:
 
   lint:proto:
     desc: Run Proto linter (buf lint)
-    cmd: echo "[lint:proto] Not yet configured — will run buf lint"
+    dir: proto
+    cmd: buf lint
 
   # ── Fixing / Formatting ──────────────────────────────────
   fix:
@@ -66,7 +67,8 @@ tasks:
 
   generate:proto:
     desc: Generate protobuf code (buf generate)
-    cmd: echo "[generate:proto] Not yet configured — will run buf generate"
+    dir: proto
+    cmd: buf generate
 
   generate:sqlc:
     desc: Generate sqlc code

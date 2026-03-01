@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package bartering.v1;
+
+option go_package = "github.com/jack-flores/bartering-games/backend/gen/bartering/v1;barteringv1";
+
+// ServingStatus indicates whether the service is healthy.
+enum ServingStatus {
+  SERVING_STATUS_UNSPECIFIED = 0;
+  SERVING_STATUS_SERVING = 1;
+  SERVING_STATUS_NOT_SERVING = 2;
+}
+
+// CheckRequest is the request message for HealthService.Check.
+message CheckRequest {}
+
+// CheckResponse is the response message for HealthService.Check.
+message CheckResponse {
+  ServingStatus status = 1;
+}
+
+// HealthService provides a health check RPC.
+service HealthService {
+  // Check returns the current serving status of the service.
+  rpc Check(CheckRequest) returns (CheckResponse) {}
+}
