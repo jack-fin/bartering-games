@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bartering}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bartering}
+      POSTGRES_DB: ${POSTGRES_DB:-bartering_dev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  prometheus:
+    image: prom/prometheus
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  loki:
+    image: grafana/loki
+    restart: unless-stopped
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - loki-data:/loki
+
+  grafana:
+    image: grafana/grafana
+    restart: unless-stopped
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - loki
+
+volumes:
+  pgdata:
+  loki-data:
+  grafana-data:

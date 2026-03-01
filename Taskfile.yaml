@@ -67,4 +67,4 @@ tasks:
   # ── Development ────────────────────────────────────────────
   dev:
     desc: Start local development environment
-    cmd: echo "[dev] Not yet configured — will run docker-compose up and start servers"
+    cmd: docker compose up
