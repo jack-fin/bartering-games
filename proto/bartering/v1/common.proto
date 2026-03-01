@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package bartering.v1;
+
+option go_package = "github.com/jack-flores/bartering-games/backend/gen/bartering/v1;barteringv1";
+
+// PaginationRequest contains cursor-based pagination parameters.
+message PaginationRequest {
+  // Opaque token for the next page. Empty for the first page.
+  string page_token = 1;
+  // Maximum number of items to return per page.
+  int32 page_size = 2;
+}
+
+// PaginationResponse contains pagination metadata for a response.
+message PaginationResponse {
+  // Opaque token for the next page. Empty if this is the last page.
+  string next_page_token = 1;
+  // Total number of items across all pages.
+  int32 total_count = 2;
+}
