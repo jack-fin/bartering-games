@@ -1,0 +1,70 @@
+version: '3'
+
+tasks:
+  # ── Linting ────────────────────────────────────────────────
+  lint:
+    desc: Run all linters (Go + TypeScript + Proto)
+    deps: [lint:go, lint:ts, lint:proto]
+
+  lint:go:
+    desc: Run Go linter (golangci-lint)
+    dir: backend
+    cmd: echo "[lint:go] Not yet configured — will run golangci-lint"
+
+  lint:ts:
+    desc: Run TypeScript linter (Biome)
+    dir: frontend
+    cmd: echo "[lint:ts] Not yet configured — will run Biome lint + format check"
+
+  lint:proto:
+    desc: Run Proto linter (buf lint)
+    cmd: echo "[lint:proto] Not yet configured — will run buf lint"
+
+  # ── Testing ────────────────────────────────────────────────
+  test:
+    desc: Run all unit tests (Go + TypeScript)
+    deps: [test:go, test:ts]
+
+  test:go:
+    desc: Run Go unit tests
+    dir: backend
+    cmd: echo "[test:go] Not yet configured — will run go test ./..."
+
+  test:ts:
+    desc: Run TypeScript unit tests (Vitest)
+    dir: frontend
+    cmd: echo "[test:ts] Not yet configured — will run vitest"
+
+  test:int:
+    desc: Run integration tests (testcontainers, requires Docker)
+    dir: backend
+    cmd: echo "[test:int] Not yet configured — will run go test -tags=integration ./..."
+
+  test:e2e:
+    desc: Run Playwright browser tests
+    dir: frontend
+    cmd: echo "[test:e2e] Not yet configured — will run playwright test"
+
+  # ── Code Generation ────────────────────────────────────────
+  generate:
+    desc: Run all codegen (buf generate + sqlc generate)
+    deps: [generate:proto, generate:sqlc]
+
+  generate:proto:
+    desc: Generate protobuf code (buf generate)
+    cmd: echo "[generate:proto] Not yet configured — will run buf generate"
+
+  generate:sqlc:
+    desc: Generate sqlc code
+    dir: backend
+    cmd: echo "[generate:sqlc] Not yet configured — will run sqlc generate"
+
+  # ── Database ───────────────────────────────────────────────
+  migrate:
+    desc: Run Atlas database migrations
+    cmd: echo "[migrate] Not yet configured — will run atlas migrate apply"
+
+  # ── Development ────────────────────────────────────────────
+  dev:
+    desc: Start local development environment
+    cmd: echo "[dev] Not yet configured — will run docker-compose up and start servers"
