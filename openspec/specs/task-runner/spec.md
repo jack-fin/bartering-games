@@ -23,7 +23,7 @@ The Taskfile SHALL define `test`, `test:go`, `test:ts`, `test:int`, and `test:e2
 
 #### Scenario: Go unit tests
 - **WHEN** a developer runs `task test:go`
-- **THEN** Go unit tests execute from the `backend/` directory (or a stub message prints)
+- **THEN** `go test ./...` executes from the `backend/` directory
 
 #### Scenario: TypeScript unit tests
 - **WHEN** a developer runs `task test:ts`
@@ -72,3 +72,14 @@ Any task that is not yet wired to real tooling SHALL print a descriptive message
 #### Scenario: Stub task output
 - **WHEN** a developer runs a stub task (e.g., `task lint`)
 - **THEN** the output includes a message like "Not yet configured" and describes the intended behavior
+
+### Requirement: Backend dev task
+The Taskfile SHALL define a `dev:backend` task that runs the Go backend server locally using `go run ./cmd/server/`.
+
+#### Scenario: Dev backend starts the server
+- **WHEN** a developer runs `task dev:backend`
+- **THEN** the Go backend server starts on the configured port
+
+#### Scenario: Dev backend runs from correct directory
+- **WHEN** a developer runs `task dev:backend`
+- **THEN** the command executes from the `backend/` directory

@@ -28,7 +28,7 @@ tasks:
   test:go:
     desc: Run Go unit tests
     dir: backend
-    cmd: echo "[test:go] Not yet configured — will run go test ./..."
+    cmd: go test ./...
 
   test:ts:
     desc: Run TypeScript unit tests (Vitest)
@@ -68,3 +68,8 @@ tasks:
   dev:
     desc: Start local development environment
     cmd: docker compose up
+
+  dev:backend:
+    desc: Run Go backend server locally
+    dir: backend
+    cmd: go run ./cmd/server/
