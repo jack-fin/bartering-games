@@ -9,14 +9,14 @@ import (
 	"connectrpc.com/connect"
 	"github.com/go-chi/chi/v5"
 
-	barteringv1 "github.com/jack-fin/bartering-games/backend/gen/bartering/v1"
-	"github.com/jack-fin/bartering-games/backend/gen/bartering/v1/barteringv1connect"
+	pb "github.com/jack-fin/bartering-games/backend/gen/bartering/v1"
+	rpc "github.com/jack-fin/bartering-games/backend/gen/bartering/v1/barteringv1connect"
 	"github.com/jack-fin/bartering-games/backend/internal/handler"
 )
 
 func newTestRouter() *chi.Mux {
 	r := chi.NewRouter()
-	path, h := barteringv1connect.NewHealthServiceHandler(&handler.HealthHandler{})
+	path, h := rpc.NewHealthServiceHandler(&handler.HealthHandler{})
 	r.Mount(path, h)
 	return r
 }
@@ -25,13 +25,13 @@ func TestHealthCheck(t *testing.T) {
 	srv := httptest.NewServer(newTestRouter())
 	t.Cleanup(srv.Close)
 
-	client := barteringv1connect.NewHealthServiceClient(srv.Client(), srv.URL)
-	resp, err := client.Check(context.Background(), connect.NewRequest(&barteringv1.CheckRequest{}))
+	client := rpc.NewHealthServiceClient(srv.Client(), srv.URL)
+	resp, err := client.Check(context.Background(), connect.NewRequest(&pb.CheckRequest{}))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if resp.Msg.Status != barteringv1.ServingStatus_SERVING_STATUS_SERVING {
+	if resp.Msg.Status != pb.ServingStatus_SERVING_STATUS_SERVING {
 		t.Errorf("expected SERVING, got %v", resp.Msg.Status)
 	}
 }
@@ -40,17 +40,17 @@ func TestHealthCheckJSON(t *testing.T) {
 	srv := httptest.NewServer(newTestRouter())
 	t.Cleanup(srv.Close)
 
-	client := barteringv1connect.NewHealthServiceClient(
+	client := rpc.NewHealthServiceClient(
 		srv.Client(),
 		srv.URL,
 		connect.WithProtoJSON(),
 	)
-	resp, err := client.Check(context.Background(), connect.NewRequest(&barteringv1.CheckRequest{}))
+	resp, err := client.Check(context.Background(), connect.NewRequest(&pb.CheckRequest{}))
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if resp.Msg.Status != barteringv1.ServingStatus_SERVING_STATUS_SERVING {
+	if resp.Msg.Status != pb.ServingStatus_SERVING_STATUS_SERVING {
 		t.Errorf("expected SERVING, got %v", resp.Msg.Status)
 	}
 }
