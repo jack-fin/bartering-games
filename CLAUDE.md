@@ -8,7 +8,7 @@ Domain: bartering.games
 - **Backend**: Go 1.26 (Chi router, Connect-go for RPC, sqlc for queries, pgx for dynamic SQL)
 - **Frontend**: SvelteKit (Svelte 5), TypeScript, pnpm
 - **API Contract**: Protobuf + Buf + Connect (`.proto` files are the source of truth)
-- **Database**: PostgreSQL, Atlas migrations (SQL-mode), sqlc codegen
+- **Database**: PostgreSQL, Atlas migrations (declarative HCL schema + versioned migrations), sqlc codegen
 - **Deployment**: Kamal 2 on Hetzner VPS, Docker images, Traefik for SSL
 - **Monitoring**: Prometheus + Grafana + Loki (self-hosted), Sentry, UptimeRobot
 
@@ -37,7 +37,7 @@ bartering-games/
 │   │   ├── worker/         # Background sync goroutines
 │   │   └── crypto/         # Server-side crypto utilities
 │   ├── gen/                # Generated protobuf Go code
-│   ├── migrations/         # Atlas migration files
+│   ├── migrations/         # Atlas versioned migration files
 │   └── Dockerfile
 ├── frontend/               # SvelteKit web UI
 │   ├── src/lib/

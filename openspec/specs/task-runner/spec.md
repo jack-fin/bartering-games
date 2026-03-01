@@ -57,11 +57,26 @@ The Taskfile SHALL define `generate`, `generate:proto`, and `generate:sqlc` task
 - **THEN** sqlc generate runs from the `backend/` directory (or a stub message prints)
 
 ### Requirement: Migrate task
-The Taskfile SHALL define a `migrate` task for running Atlas database migrations.
+The Taskfile SHALL define a `migrate` task that runs `atlas migrate apply` from the `backend/` directory to apply pending database migrations.
 
-#### Scenario: Migrate task
+#### Scenario: Migrate task applies migrations
 - **WHEN** a developer runs `task migrate`
-- **THEN** Atlas migrations run (or a stub message prints)
+- **THEN** `atlas migrate apply` executes from the `backend/` directory using the `atlas.hcl` configuration
+
+#### Scenario: Migrate task uses atlas config
+- **WHEN** a developer runs `task migrate`
+- **THEN** Atlas reads connection settings from `backend/atlas.hcl`
+
+### Requirement: Migrate diff task
+The Taskfile SHALL define a `migrate:diff` task that runs `atlas migrate diff` to auto-generate a new versioned SQL migration from the difference between the current migration state and the desired HCL schema.
+
+#### Scenario: Diff generates migration file
+- **WHEN** a developer modifies `backend/schema.hcl` and runs `task migrate:diff -- <name>`
+- **THEN** a new SQL migration file is created in `backend/migrations/` containing the DDL to reach the desired state
+
+#### Scenario: Diff with no changes
+- **WHEN** a developer runs `task migrate:diff` and the HCL schema matches the current migration state
+- **THEN** no new migration file is generated
 
 ### Requirement: Dev task
 The Taskfile SHALL define a `dev` task that starts the local development environment by running `docker compose up`.
