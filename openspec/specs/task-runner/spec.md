@@ -12,7 +12,7 @@ The Taskfile SHALL define a `lint` task that runs all linters (Go, TypeScript, P
 
 #### Scenario: Lint task runs sub-linters
 - **WHEN** a developer runs `task lint`
-- **THEN** Go, TypeScript, and Proto linters all execute (or print stub messages if not yet configured)
+- **THEN** Go, TypeScript, and Proto linters all execute
 
 ### Requirement: Test tasks
 The Taskfile SHALL define `test`, `test:go`, `test:ts`, `test:int`, and `test:e2e` tasks.
@@ -27,7 +27,7 @@ The Taskfile SHALL define `test`, `test:go`, `test:ts`, `test:int`, and `test:e2
 
 #### Scenario: TypeScript unit tests
 - **WHEN** a developer runs `task test:ts`
-- **THEN** TypeScript unit tests execute from the `frontend/` directory (or a stub message prints)
+- **THEN** `pnpm vitest run` executes from the `frontend/` directory
 
 #### Scenario: Integration tests
 - **WHEN** a developer runs `task test:int`
@@ -83,3 +83,28 @@ The Taskfile SHALL define a `dev:backend` task that runs the Go backend server l
 #### Scenario: Dev backend runs from correct directory
 - **WHEN** a developer runs `task dev:backend`
 - **THEN** the command executes from the `backend/` directory
+
+### Requirement: TypeScript lint task
+The Taskfile SHALL define a `lint:ts` task that runs ESLint and Prettier check from the `frontend/` directory.
+
+#### Scenario: Lint TS runs ESLint and Prettier
+- **WHEN** a developer runs `task lint:ts`
+- **THEN** `pnpm eslint .` and `pnpm prettier --check .` execute from the `frontend/` directory
+
+### Requirement: TypeScript fix task
+The Taskfile SHALL define a `fix:ts` task that auto-fixes ESLint and Prettier issues from the `frontend/` directory.
+
+#### Scenario: Fix TS auto-corrects issues
+- **WHEN** a developer runs `task fix:ts`
+- **THEN** `pnpm eslint --fix .` and `pnpm prettier --write .` execute from the `frontend/` directory
+
+### Requirement: Frontend dev task
+The Taskfile SHALL define a `dev:frontend` task that runs `pnpm dev` from the `frontend/` directory.
+
+#### Scenario: Dev frontend starts the dev server
+- **WHEN** a developer runs `task dev:frontend`
+- **THEN** the SvelteKit dev server starts
+
+#### Scenario: Dev frontend runs from correct directory
+- **WHEN** a developer runs `task dev:frontend`
+- **THEN** the command executes from the `frontend/` directory

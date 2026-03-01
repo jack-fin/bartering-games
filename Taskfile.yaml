@@ -12,13 +12,27 @@ tasks:
     cmd: echo "[lint:go] Not yet configured — will run golangci-lint"
 
   lint:ts:
-    desc: Run TypeScript linter (Biome)
+    desc: Run TypeScript linter (ESLint + Prettier)
     dir: frontend
-    cmd: echo "[lint:ts] Not yet configured — will run Biome lint + format check"
+    cmds:
+      - pnpm eslint .
+      - pnpm prettier --check .
 
   lint:proto:
     desc: Run Proto linter (buf lint)
     cmd: echo "[lint:proto] Not yet configured — will run buf lint"
+
+  # ── Fixing / Formatting ──────────────────────────────────
+  fix:
+    desc: Auto-fix all linting and formatting issues
+    deps: [fix:ts]
+
+  fix:ts:
+    desc: Auto-fix TypeScript lint and formatting issues
+    dir: frontend
+    cmds:
+      - pnpm eslint --fix .
+      - pnpm prettier --write .
 
   # ── Testing ────────────────────────────────────────────────
   test:
@@ -33,7 +47,7 @@ tasks:
   test:ts:
     desc: Run TypeScript unit tests (Vitest)
     dir: frontend
-    cmd: echo "[test:ts] Not yet configured — will run vitest"
+    cmd: pnpm vitest run
 
   test:int:
     desc: Run integration tests (testcontainers, requires Docker)
@@ -73,3 +87,8 @@ tasks:
     desc: Run Go backend server locally
     dir: backend
     cmd: go run ./cmd/server/
+
+  dev:frontend:
+    desc: Run SvelteKit dev server
+    dir: frontend
+    cmd: pnpm dev
