@@ -1,0 +1,35 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+__debug_bin*
+
+# Node / TypeScript
+node_modules/
+.svelte-kit/
+build/
+dist/
+*.tsbuildinfo
+
+# IDE (do NOT ignore .vscode — it's committed for shared config)
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Environment
+.env
+.env.local
+.env.*.local
