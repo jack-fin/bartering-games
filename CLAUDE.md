@@ -52,6 +52,12 @@ bartering-games/
 └── .github/workflows/      # CI/CD
 ```
 
+## Build Output
+
+- Go binaries go in `backend/bin/` (gitignored). Always use `go build -o bin/ ./cmd/...`
+  when compiling manually. Never run `go build` without `-o bin/` — bare `go build`
+  drops binaries in the source tree.
+
 ## Code Style & Conventions
 
 - **Readability over cleverness**, unless the performance benefit is significant

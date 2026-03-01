@@ -8,6 +8,7 @@
 *.out
 vendor/
 __debug_bin*
+bin/
 
 # Node / TypeScript
 node_modules/

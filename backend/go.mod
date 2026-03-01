@@ -1,4 +1,4 @@
-module github.com/jack-flores/bartering-games/backend
+module github.com/jack-fin/bartering-games/backend
 
 go 1.26.0
 

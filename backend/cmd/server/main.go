@@ -13,6 +13,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+
+	"github.com/jack-fin/bartering-games/backend/gen/bartering/v1/barteringv1connect"
+	"github.com/jack-fin/bartering-games/backend/internal/handler"
 )
 
 func main() {
@@ -36,10 +39,8 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "ok")
-	})
+	healthPath, healthHandler := barteringv1connect.NewHealthServiceHandler(&handler.HealthHandler{})
+	r.Mount(healthPath, healthHandler)
 
 	r.Get("/readyz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

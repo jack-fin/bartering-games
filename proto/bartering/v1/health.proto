@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package bartering.v1;
 
-option go_package = "github.com/jack-flores/bartering-games/backend/gen/bartering/v1;barteringv1";
+option go_package = "github.com/jack-fin/bartering-games/backend/gen/bartering/v1;barteringv1";
 
 // ServingStatus indicates whether the service is healthy.
 enum ServingStatus {
