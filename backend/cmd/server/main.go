@@ -14,7 +14,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
-	"github.com/jack-fin/bartering-games/backend/gen/bartering/v1/barteringv1connect"
+	rpc "github.com/jack-fin/bartering-games/backend/gen/bartering/v1/barteringv1connect"
 	"github.com/jack-fin/bartering-games/backend/internal/handler"
 )
 
@@ -39,7 +39,7 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	healthPath, healthHandler := barteringv1connect.NewHealthServiceHandler(&handler.HealthHandler{})
+	healthPath, healthHandler := rpc.NewHealthServiceHandler(&handler.HealthHandler{})
 	r.Mount(healthPath, healthHandler)
 
 	r.Get("/readyz", func(w http.ResponseWriter, r *http.Request) {
