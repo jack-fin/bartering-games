@@ -72,8 +72,8 @@ tasks:
 
   generate:sqlc:
     desc: Generate sqlc code
-    dir: backend
-    cmd: echo "[generate:sqlc] Not yet configured — will run sqlc generate"
+    dir: backend/internal/storage
+    cmd: sqlc generate
 
   # ── Database ───────────────────────────────────────────────
   "migrate":
