@@ -38,12 +38,14 @@ jobs:
           curl -sSL https://github.com/sqlc-dev/sqlc/releases/download/v1.27.0/sqlc_1.27.0_linux_amd64.tar.gz \
             | tar -xz -C /usr/local/bin sqlc
 
-      # Go linting via official action — provides analysis cache + PR annotations
+      # Go linting via official action — provides analysis cache + PR annotations.
+      # install-mode: goinstall compiles golangci-lint from source using the project's
+      # Go version, required because pre-built binaries lag behind Go releases.
       - name: Lint Go
         uses: golangci/golangci-lint-action@v6
         with:
           working-directory: backend
-          version: latest
+          install-mode: goinstall
 
       # TypeScript + Svelte linting (ESLint + Prettier)
       - uses: pnpm/action-setup@v4
@@ -312,6 +314,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: pnpm/action-setup@v4
         with:
