@@ -5,6 +5,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash .claude/hooks/check-shortcut-branch.sh"
+          },
+          {
+            "type": "command",
             "command": "bash .claude/hooks/check-openspec-archived.sh"
           }
         ]
@@ -16,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/pre-git-check-openspec.sh"
+            "command": "bash .claude/hooks/pre-commit-push-checks.sh"
           }
         ]
       }
