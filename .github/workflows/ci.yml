@@ -103,7 +103,7 @@ jobs:
         continue-on-error: true
         run: |
           set +e
-          output=$(cd proto && buf breaking --against '../.git#branch=origin/main' 2>&1)
+          output=$(cd proto && buf breaking --against '../.git#branch=origin/main,subdir=proto' 2>&1)
           code=$?
           set -e
           echo "$output"

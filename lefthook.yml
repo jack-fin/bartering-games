@@ -36,4 +36,4 @@ pre-commit:
       root: "proto"
       # Checks for backward-incompatible changes against main.
       # To bypass intentionally: LEFTHOOK_SKIP=lint-proto-breaking git commit
-      run: buf breaking --against '.git#branch=main'
+      run: buf breaking --against '../.git#branch=main,subdir=proto'
