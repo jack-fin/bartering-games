@@ -157,6 +157,7 @@ jobs:
       # Linter outputs are passed via env vars (not interpolated into JS) to
       # prevent injection if output contains backticks or template expressions.
       - name: Post lint results comment
+        continue-on-error: true
         if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
