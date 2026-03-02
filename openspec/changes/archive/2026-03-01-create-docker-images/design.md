@@ -6,7 +6,7 @@ The backend (Go) and frontend (SvelteKit with adapter-node) need production Dock
 
 **Goals:**
 - Multi-stage Dockerfiles that produce small, non-root runtime images
-- Backend image builds a statically-linked Go binary (`CGO_DISABLED=1`)
+- Backend image builds a statically-linked Go binary (`CGO_ENABLED=0`)
 - Frontend image installs deps with pnpm and builds the SvelteKit adapter-node output
 - Both images declare a `HEALTHCHECK` against `/healthz`
 - A `task docker:build` command builds both images locally
@@ -21,7 +21,7 @@ The backend (Go) and frontend (SvelteKit with adapter-node) need production Dock
 
 ### Backend runtime base: `gcr.io/distroless/static-debian12:nonroot`
 
-The Go binary is compiled with `CGO_DISABLED=1 GOOS=linux`, producing a fully static binary with no libc dependency. Distroless static provides exactly enough to run it — no shell, no package manager, no OS utilities. The `nonroot` tag runs as UID 65532 without an additional `USER` directive.
+The Go binary is compiled with `CGO_ENABLED=0 GOOS=linux`, producing a fully static binary with no libc dependency. Distroless static provides exactly enough to run it — no shell, no package manager, no OS utilities. The `nonroot` tag runs as UID 65532 without an additional `USER` directive.
 
 **Alternative considered:** `alpine:3` — familiar, has a shell for debugging. Rejected: the shell is a security liability in production and there is no dynamic linking benefit to justify it.
 

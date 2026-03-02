@@ -22,6 +22,7 @@ FROM gcr.io/distroless/static-debian12:nonroot
 
 COPY --from=build /bin/server /server
 COPY --from=busybox /bin/wget /bin/wget
+USER 65532:65532
 
 EXPOSE 8080
 

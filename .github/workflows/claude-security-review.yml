@@ -35,6 +35,7 @@ jobs:
         id: claude-security-review
         uses: anthropics/claude-code-action@ba7fa4bcf054319261202aef93d71a89112a8d00 # v1.0.64
         with:
+          show_full_output: true
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           # plugins: 'code-review@claude-code-plugins'
