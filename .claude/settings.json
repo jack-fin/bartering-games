@@ -5,7 +5,10 @@
       "Bash(git log:*)",
       "Bash(git diff:*)",
       "Bash(git fetch:*)",
-      "Bash(git show:*)"
+      "Bash(git show:*)",
+      "Bash(mv openspec/:*)",
+      "Bash(mkdir -p openspec/:*)",
+      "Bash(cp openspec/:*)"
     ]
   },
   "hooks": {
