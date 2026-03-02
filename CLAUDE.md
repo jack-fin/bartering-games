@@ -91,8 +91,7 @@ Pre-commit hooks run linters automatically on staged files before each commit.
 Install once after cloning:
 
 ```bash
-brew install lefthook golangci-lint gopls  # prerequisites
-npm install -g typescript-language-server  # for Claude Code TypeScript LSP
+brew install lefthook golangci-lint gopls typescript-language-server  # prerequisites
 task hooks:install
 ```
 
@@ -102,11 +101,12 @@ LSP servers give Claude real-time diagnostics, go-to-definition, and type info w
 
 Active plugins (installed via `claude-plugins-official` marketplace):
 - **Go**: `gopls-lsp` — requires `gopls` in PATH: `brew install gopls`
-- **TypeScript**: `typescript-lsp` — requires `typescript-language-server` in PATH: `npm install -g typescript-language-server`
+- **TypeScript**: `typescript-lsp` — requires `typescript-language-server` in PATH: `brew install typescript-language-server`
 
-Note: `svelte-language-server` and `typescript-language-server` are pnpm dev deps in `frontend/`
-for editor tooling (VS Code, Neovim, etc.) — they are version-pinned so all devs get the same
-server after `pnpm install`. No Svelte LSP plugin exists for Claude Code yet.
+Note: `svelte-language-server` is a pnpm dev dep in `frontend/` for editor tooling (VS Code,
+Neovim, etc.) — it is version-pinned so all devs get the same server after `pnpm install`.
+`typescript-language-server` is installed via Homebrew (not a pnpm dep).
+No Svelte LSP plugin exists for Claude Code yet.
 
 Hooks run in parallel and only check staged files — Go, TS/Svelte, and Proto each
 have their own linter triggered only when relevant files are staged.
