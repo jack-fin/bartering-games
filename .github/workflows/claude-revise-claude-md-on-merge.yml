@@ -28,5 +28,8 @@ jobs:
             recent commits and codebase state, then update CLAUDE.md with any context that
             would help future Claude sessions (commands, patterns, structure, gotchas).
             Apply the updates and commit them to the default branch (no user approval step).
+            Remember that this is injected into every context, so claude rules may be a 
+            better option than Claude.md. In these cases, instead you should create a claude
+            rule, and commit those.
           claude_args: |
             --allowed-tools "Read,Write,Edit,Glob,Bash(git:*)"
