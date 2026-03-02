@@ -1,0 +1,32 @@
+# Pre-commit hooks: lint and auto-fix staged files only (fast).
+# For full-repo lint (CI), run: task lint
+
+pre-commit:
+  parallel: true
+  commands:
+    lint-go:
+      glob: "backend/**/*.go"
+      root: "backend"
+      # Runs the full backend rather than staged files only. golangci-lint works on
+      # packages and may miss cross-file violations with per-file scoping.
+      # To scope to staged files instead: run: golangci-lint run --fix {staged_files}
+      run: golangci-lint run --fix ./...
+      stage_fixed: true
+
+    lint-ts-eslint:
+      glob: "frontend/**/*.{ts,svelte}"
+      root: "frontend"
+      run: pnpm eslint --fix {staged_files}
+      stage_fixed: true
+
+    lint-ts-prettier:
+      glob: "frontend/**/*.{ts,svelte,json}"
+      root: "frontend"
+      run: pnpm prettier --write {staged_files}
+      stage_fixed: true
+
+    lint-proto:
+      glob: "proto/**/*.proto"
+      root: "proto"
+      # buf lint has no auto-fix — violations block the commit
+      run: buf lint

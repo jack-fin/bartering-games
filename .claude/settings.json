@@ -1,15 +1,30 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git fetch:*)",
+      "Bash(git show:*)"
+    ]
+  },
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-opsx-propose-starts-new-work-on-main.sh"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
             "command": "bash .claude/hooks/check-shortcut-branch.sh"
-          },
-          {
-            "type": "command",
-            "command": "bash .claude/hooks/check-openspec-archived.sh"
           }
         ]
       }
