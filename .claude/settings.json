@@ -1,4 +1,31 @@
 {
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-shortcut-branch.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-openspec-archived.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/pre-commit-push-checks.sh"
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true,
     "coderabbit@claude-plugins-official": true,

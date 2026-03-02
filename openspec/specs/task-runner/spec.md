@@ -52,9 +52,9 @@ The Taskfile SHALL define `generate`, `generate:proto`, and `generate:sqlc` task
 - **WHEN** a developer runs `task generate:proto`
 - **THEN** the command executes from the `proto/` directory
 
-#### Scenario: sqlc codegen
+#### Scenario: sqlc codegen runs sqlc generate
 - **WHEN** a developer runs `task generate:sqlc`
-- **THEN** sqlc generate runs from the `backend/` directory (or a stub message prints)
+- **THEN** `sqlc generate` executes from `backend/internal/storage/` and generates Go code in `backend/internal/storage/db/`
 
 ### Requirement: Migrate task
 The Taskfile SHALL define a `migrate` task that runs `atlas migrate apply` from the `backend/` directory to apply pending database migrations.
@@ -142,3 +142,14 @@ The Taskfile SHALL define a `dev:frontend` task that runs `pnpm dev` from the `f
 #### Scenario: Dev frontend runs from correct directory
 - **WHEN** a developer runs `task dev:frontend`
 - **THEN** the command executes from the `frontend/` directory
+
+### Requirement: Docker build task
+The Taskfile SHALL define a `docker:build` task that builds both the backend and frontend Docker images locally.
+
+#### Scenario: Docker build task builds both images
+- **WHEN** a developer runs `task docker:build`
+- **THEN** both `bartering-backend` and `bartering-frontend` images are built via `docker build`
+
+#### Scenario: Docker build task runs from repo root
+- **WHEN** a developer runs `task docker:build`
+- **THEN** the build commands execute with correct context paths (`./backend` and `./frontend`)
