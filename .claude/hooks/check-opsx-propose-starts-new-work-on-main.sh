@@ -28,21 +28,19 @@ fi
 
 echo "HOOK WARNING: /opsx:propose starts new feature work, but current branch is '$branch' (not main)."
 echo ""
-echo "It is recommended to:"
-echo "  1. Ensure main is up to date:"
-echo "     git fetch origin main"
-echo "     git checkout main && git pull --ff-only origin main"
+echo "Before doing anything else:"
 if [ -n "$story_id" ]; then
-  echo "  2. Get the Shortcut branch name: call stories-get-branch-name with storyPublicId=$story_id"
-  echo "  3. Create the feature branch from updated main using that branch name"
-  echo "     git checkout -b <branch-name>"
-  echo "  4. Then proceed with the proposal."
+  echo "  1. Call the stories-get-branch-name MCP tool with storyPublicId=$story_id to get the"
+  echo "     exact branch name. Do NOT construct or guess the branch name yourself."
 else
-  echo "  2. Get the correct branch name from the Shortcut story (stories-get-branch-name)"
-  echo "  3. Create the feature branch from updated main"
-  echo "  4. Then proceed with the proposal."
+  echo "  1. Call the stories-get-branch-name MCP tool to get the exact branch name."
+  echo "     Do NOT construct or guess the branch name yourself."
 fi
-echo ""
-echo "Confirm with the user before switching branches."
+echo "  2. Confirm with the user before switching branches, showing the exact branch name"
+echo "     returned by the tool."
+echo "  3. If confirmed:"
+echo "     git checkout main && git pull --ff-only origin main"
+echo "     git checkout -b <exact-name-from-tool>"
+echo "  4. Then proceed with the proposal."
 
 exit 0
