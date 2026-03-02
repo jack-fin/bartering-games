@@ -30,6 +30,10 @@ export declare const CheckRequestSchema: GenMessage<CheckRequest>;
  * @generated from message bartering.v1.CheckResponse
  */
 export declare type CheckResponse = Message<"bartering.v1.CheckResponse"> & {
+  /**
+   * @generated from field: bartering.v1.ServingStatus status = 1;
+   */
+  status: ServingStatus;
 };
 
 /**

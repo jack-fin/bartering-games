@@ -111,6 +111,7 @@ func (*CheckRequest) Descriptor() ([]byte, []int) {
 // CheckResponse is the response message for HealthService.Check.
 type CheckResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        ServingStatus          `protobuf:"varint,1,opt,name=status,proto3,enum=bartering.v1.ServingStatus" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -145,13 +146,21 @@ func (*CheckResponse) Descriptor() ([]byte, []int) {
 	return file_bartering_v1_health_proto_rawDescGZIP(), []int{1}
 }
 
+func (x *CheckResponse) GetStatus() ServingStatus {
+	if x != nil {
+		return x.Status
+	}
+	return ServingStatus_SERVING_STATUS_UNSPECIFIED
+}
+
 var File_bartering_v1_health_proto protoreflect.FileDescriptor
 
 const file_bartering_v1_health_proto_rawDesc = "" +
 	"\n" +
 	"\x19bartering/v1/health.proto\x12\fbartering.v1\"\x0e\n" +
-	"\fCheckRequest\"\x0f\n" +
-	"\rCheckResponse*k\n" +
+	"\fCheckRequest\"D\n" +
+	"\rCheckResponse\x123\n" +
+	"\x06status\x18\x01 \x01(\x0e2\x1b.bartering.v1.ServingStatusR\x06status*k\n" +
 	"\rServingStatus\x12\x1e\n" +
 	"\x1aSERVING_STATUS_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16SERVING_STATUS_SERVING\x10\x01\x12\x1e\n" +
@@ -179,13 +188,14 @@ var file_bartering_v1_health_proto_goTypes = []any{
 	(*CheckResponse)(nil), // 2: bartering.v1.CheckResponse
 }
 var file_bartering_v1_health_proto_depIdxs = []int32{
-	1, // 0: bartering.v1.HealthService.Check:input_type -> bartering.v1.CheckRequest
-	2, // 1: bartering.v1.HealthService.Check:output_type -> bartering.v1.CheckResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: bartering.v1.CheckResponse.status:type_name -> bartering.v1.ServingStatus
+	1, // 1: bartering.v1.HealthService.Check:input_type -> bartering.v1.CheckRequest
+	2, // 2: bartering.v1.HealthService.Check:output_type -> bartering.v1.CheckResponse
+	2, // [2:3] is the sub-list for method output_type
+	1, // [1:2] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_bartering_v1_health_proto_init() }

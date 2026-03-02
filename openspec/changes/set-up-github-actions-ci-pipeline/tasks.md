@@ -22,7 +22,7 @@
 ## 3. Verification
 
 - [x] 3.1 Push the branch and confirm all jobs appear in GitHub Actions and pass on a clean run
-- [ ] 3.2 Introduce a deliberate proto breaking change on a test commit, verify the lint job fails and the PR comment shows the buf breaking error with bypass instructions
-- [ ] 3.3 Re-run after applying the `api:breaking-change` label — verify the comment is updated (not duplicated) and the job passes
+- [x] 3.2 Introduce a deliberate proto breaking change on a test commit, verify the lint job fails and the PR comment shows the buf breaking error with bypass instructions
+- [x] 3.3 Re-run after applying the `api:breaking-change` label — verify the comment is updated (not duplicated) and the job passes
 - [x] 3.4 Verify the Docker image cache is populated after the first `test-go` run and used (not re-pulled) on a second run
 - [x] 3.5 Remove `.gitkeep` from `.github/workflows/` if present

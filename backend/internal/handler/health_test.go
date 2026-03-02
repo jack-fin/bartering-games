@@ -26,8 +26,12 @@ func TestHealthCheck(t *testing.T) {
 	t.Cleanup(srv.Close)
 
 	client := rpc.NewHealthServiceClient(srv.Client(), srv.URL)
-	if _, err := client.Check(context.Background(), connect.NewRequest(&pb.CheckRequest{})); err != nil {
+	resp, err := client.Check(context.Background(), connect.NewRequest(&pb.CheckRequest{}))
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp.Msg.Status != pb.ServingStatus_SERVING_STATUS_SERVING {
+		t.Errorf("expected SERVING, got %v", resp.Msg.Status)
 	}
 }
 
@@ -40,8 +44,12 @@ func TestHealthCheckJSON(t *testing.T) {
 		srv.URL,
 		connect.WithProtoJSON(),
 	)
-	if _, err := client.Check(context.Background(), connect.NewRequest(&pb.CheckRequest{})); err != nil {
+	resp, err := client.Check(context.Background(), connect.NewRequest(&pb.CheckRequest{}))
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp.Msg.Status != pb.ServingStatus_SERVING_STATUS_SERVING {
+		t.Errorf("expected SERVING, got %v", resp.Msg.Status)
 	}
 }
 

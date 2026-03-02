@@ -1,0 +1,9 @@
+{
+  "svelte": {
+    "command": "./frontend/node_modules/.bin/svelteserver",
+    "args": ["--stdio"],
+    "extensionToLanguage": {
+      ".svelte": "svelte"
+    }
+  }
+}

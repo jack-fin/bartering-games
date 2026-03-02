@@ -91,7 +91,7 @@ Pre-commit hooks run linters automatically on staged files before each commit.
 Install once after cloning:
 
 ```bash
-brew install lefthook golangci-lint  # prerequisites
+brew install lefthook golangci-lint gopls  # prerequisites (gopls needed for gopls-lsp Claude plugin)
 task hooks:install
 ```
 
