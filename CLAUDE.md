@@ -38,6 +38,8 @@ bartering-games/
 │   │   └── crypto/         # Server-side crypto utilities
 │   ├── gen/                # Generated protobuf Go code
 │   ├── migrations/         # Atlas versioned migration files
+│   ├── schema.hcl          # Declarative DB schema (Atlas source of truth)
+│   ├── atlas.hcl           # Atlas CLI config (envs, dev database)
 │   └── Dockerfile
 ├── frontend/               # SvelteKit web UI
 │   ├── src/lib/
@@ -49,7 +51,7 @@ bartering-games/
 │   └── Dockerfile
 ├── docker-compose.yaml     # Local dev (Postgres, Prometheus, Grafana, Loki)
 ├── Taskfile.yaml           # Task runner (use `task` not `make`)
-└── .github/workflows/      # CI/CD
+└── .github/workflows/      # CI/CD (planned, not yet created)
 ```
 
 ## Build Output
@@ -97,6 +99,7 @@ task generate      # Run all codegen (buf generate + sqlc generate)
 task generate:proto  # buf generate only
 task generate:sqlc   # sqlc generate only
 task migrate       # Run Atlas migrations
+task migrate:diff  # Generate migration from schema.hcl diff (usage: task migrate:diff -- <name>)
 task dev           # Start local dev environment (docker-compose up + servers)
 ```
 
@@ -124,6 +127,8 @@ task dev           # Start local dev environment (docker-compose up + servers)
   feature branch. Do not invent a new branch name.
 - All feature work (commits, pushes) happens on the feature branch, never on `main`.
   Merge into `main` only via squash-merge PR.
+- Shortcut stories auto-transition to "Done" when their linked PR is merged (via
+  GitHub integration). No need to manually update story state after merge.
 
 ## Architecture Patterns
 
@@ -137,3 +142,8 @@ task dev           # Start local dev environment (docker-compose up + servers)
   Session lookup per request (~0.2ms). Instant revocation on logout/compromise.
 - **Generated code checked into Git**: Both protobuf (backend/gen/, frontend/gen/) and
   sqlc (backend/internal/storage/db/) output is committed. CI validates freshness.
+- **sqlc query conventions**: Use named parameters (`@param_name`) instead of positional
+  (`$1`, `$2`) in query files. Run `go mod tidy` after `sqlc generate` if new imports
+  are introduced — sqlc-generated code can promote indirect deps to direct.
+- **Housekeeping**: Remove `.gitkeep` placeholder files from directories once real
+  content is added.
