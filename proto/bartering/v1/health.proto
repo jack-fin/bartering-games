@@ -15,9 +15,7 @@ enum ServingStatus {
 message CheckRequest {}
 
 // CheckResponse is the response message for HealthService.Check.
-message CheckResponse {
-  ServingStatus status = 1;
-}
+message CheckResponse {}
 
 // HealthService provides a health check RPC.
 service HealthService {
