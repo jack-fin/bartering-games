@@ -92,6 +92,12 @@ tasks:
     dir: backend
     cmd: go build -o bin/server ./cmd/server/
 
+  docker:build:
+    desc: Build backend and frontend Docker images
+    cmds:
+      - docker build -t bartering-backend ./backend
+      - docker build -t bartering-frontend ./frontend
+
   # ── Development ────────────────────────────────────────────
   dev:
     desc: Start local development environment

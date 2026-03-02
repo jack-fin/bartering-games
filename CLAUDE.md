@@ -130,6 +130,12 @@ task dev           # Start local dev environment (docker-compose up + servers)
 - Shortcut stories auto-transition to "Done" when their linked PR is merged (via
   GitHub integration). No need to manually update story state after merge.
 
+## Docker
+
+- The backend runtime image uses `gcr.io/distroless/static-debian12:nonroot` — no shell, no package manager, runs as UID 65532. For local debugging (`docker exec`), swap to `gcr.io/distroless/static-debian12:debug` which includes busybox.
+- The frontend runtime image uses `node:22-alpine` running as the `node` user.
+- Build both images locally with `task docker:build`.
+
 ## Architecture Patterns
 
 - **Ports and Adapters**: Business logic in `service/` depends on interfaces in `port/`.

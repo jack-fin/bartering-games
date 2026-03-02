@@ -42,6 +42,11 @@ func main() {
 	healthPath, healthHandler := rpc.NewHealthServiceHandler(&handler.HealthHandler{})
 	r.Mount(healthPath, healthHandler)
 
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, "ok")
+	})
+
 	r.Get("/readyz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, "ok")
