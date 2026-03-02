@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  push:
   pull_request:
+  merge_group:
 
 jobs:
   # ── Lint ────────────────────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ jobs:
         continue-on-error: true
         run: |
           set +e
-          output=$(cd proto && buf breaking --against '../.git#branch=main' 2>&1)
+          output=$(cd proto && buf breaking --against '../.git#branch=origin/main' 2>&1)
           code=$?
           set -e
           echo "$output"
@@ -234,7 +234,9 @@ jobs:
   check-openspec-archived:
     name: All OpenSpec changes archived
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    if: |
+      (github.event_name == 'pull_request' && github.base_ref == 'main') ||
+      (github.event_name == 'merge_group' && startsWith(github.event.merge_group.base_ref, 'refs/heads/main'))
 
     steps:
       - uses: actions/checkout@v4
