@@ -38,7 +38,7 @@ sqlc SHALL generate Go code into `backend/internal/storage/db/` with package nam
 ### Requirement: Generated code committed to Git
 Generated sqlc code in `backend/internal/storage/db/` SHALL be committed to the repository, matching the project convention for generated code.
 
-#### Scenario: CI freshness check
+#### Scenario: CI verifies codegen is committed
 - **WHEN** CI runs `sqlc generate` and checks `git diff`
 - **THEN** there are no uncommitted changes in `backend/internal/storage/db/`
 

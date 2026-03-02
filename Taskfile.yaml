@@ -53,7 +53,7 @@ tasks:
   test:int:
     desc: Run integration tests (testcontainers, requires Docker)
     dir: backend
-    cmd: echo "[test:int] Not yet configured — will run go test -tags=integration ./..."
+    cmd: go test -tags=integration ./...
 
   test:e2e:
     desc: Run Playwright browser tests

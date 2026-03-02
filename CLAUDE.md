@@ -18,6 +18,7 @@ Monorepo layout:
 ```
 bartering-games/
 ├── CLAUDE.md
+├── .claude/rules/          # Path-scoped rules (frontend, backend, proto)
 ├── openspec/               # OpenSpec artifacts (changes, specs, proposals)
 ├── proto/                  # Protobuf definitions (source of truth for API)
 │   ├── buf.yaml
@@ -63,27 +64,7 @@ bartering-games/
 ## Code Style & Conventions
 
 - **Readability over cleverness**, unless the performance benefit is significant
-- Go code follows standard Go conventions (gofmt, effective Go)
-- TypeScript uses ESLint + Prettier for linting + formatting
-- Go uses golangci-lint
-- Proto uses buf lint
 - Never log plaintext game keys, vault passphrases, or sensitive user data
-
-## Frontend Standards
-
-These three concerns are first-class requirements in every UI component, not follow-up tasks:
-
-- **Accessibility (a11y)**: Semantic HTML (`<button>`, `<nav>`, `<dialog>`, not `<div>` with
-  click handlers). Logical heading hierarchy. ARIA only when semantic HTML is insufficient.
-  All interactive elements keyboard-reachable and operable. Visible focus indicators.
-  WCAG 2.1 AA contrast (4.5:1 normal text, 3:1 large text). Never convey info through
-  color alone. `aria-live` for dynamic content (trade updates, sync progress).
-- **Internationalization (i18n)**: English-only at launch, but all user-facing strings must
-  go through the i18n function — no hardcoded text. Date/number formatting via `Intl` APIs.
-  Backend returns error codes, frontend maps to localized messages.
-- **Responsive UI**: Single adaptive layout (not separate mobile/desktop). CSS custom
-  properties for theming (light/dark via `prefers-color-scheme`). Interactions adapt by
-  input method (`pointer: coarse` vs `fine`), not screen size. Touch targets min 44px.
 
 ## Running Tasks
 
@@ -110,9 +91,22 @@ Pre-commit hooks run linters automatically on staged files before each commit.
 Install once after cloning:
 
 ```bash
-brew install lefthook golangci-lint  # prerequisites
+brew install lefthook golangci-lint gopls typescript-language-server  # prerequisites
 task hooks:install
 ```
+
+## Claude Code LSP Setup
+
+LSP servers give Claude real-time diagnostics, go-to-definition, and type info while editing.
+
+Active plugins (installed via `claude-plugins-official` marketplace):
+- **Go**: `gopls-lsp` — requires `gopls` in PATH: `brew install gopls`
+- **TypeScript**: `typescript-lsp` — requires `typescript-language-server` in PATH: `brew install typescript-language-server`
+
+Note: `svelte-language-server` is a pnpm dev dep in `frontend/` for editor tooling (VS Code,
+Neovim, etc.) — it is version-pinned so all devs get the same server after `pnpm install`.
+`typescript-language-server` is installed via Homebrew (not a pnpm dep).
+No Svelte LSP plugin exists for Claude Code yet.
 
 Hooks run in parallel and only check staged files — Go, TS/Svelte, and Proto each
 have their own linter triggered only when relevant files are staged.
@@ -167,9 +161,6 @@ directly asks for it.
 - **Server-side sessions**: Hashed tokens in Postgres, HttpOnly cookies. No JWTs.
   Session lookup per request (~0.2ms). Instant revocation on logout/compromise.
 - **Generated code checked into Git**: Both protobuf (backend/gen/, frontend/gen/) and
-  sqlc (backend/internal/storage/db/) output is committed. CI validates freshness.
-- **sqlc query conventions**: Use named parameters (`@param_name`) instead of positional
-  (`$1`, `$2`) in query files. Run `go mod tidy` after `sqlc generate` if new imports
-  are introduced — sqlc-generated code can promote indirect deps to direct.
+  sqlc (backend/internal/storage/db/) output is committed. CI verifies codegen is committed.
 - **Housekeeping**: Remove `.gitkeep` placeholder files from directories once real
   content is added.

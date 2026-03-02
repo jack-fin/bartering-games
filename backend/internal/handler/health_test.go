@@ -30,7 +30,6 @@ func TestHealthCheck(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
 	if resp.Msg.Status != pb.ServingStatus_SERVING_STATUS_SERVING {
 		t.Errorf("expected SERVING, got %v", resp.Msg.Status)
 	}
@@ -49,7 +48,6 @@ func TestHealthCheckJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
 	if resp.Msg.Status != pb.ServingStatus_SERVING_STATUS_SERVING {
 		t.Errorf("expected SERVING, got %v", resp.Msg.Status)
 	}
@@ -64,7 +62,7 @@ func TestHealthCheckHTTPMethod(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusOK {
 		t.Error("expected non-200 for GET on a Connect endpoint")

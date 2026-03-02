@@ -29,13 +29,20 @@ The Taskfile SHALL define `test`, `test:go`, `test:ts`, `test:int`, and `test:e2
 - **WHEN** a developer runs `task test:ts`
 - **THEN** `pnpm vitest run` executes from the `frontend/` directory
 
-#### Scenario: Integration tests
-- **WHEN** a developer runs `task test:int`
-- **THEN** integration tests execute from the `backend/` directory with the integration build tag (or a stub message prints)
-
 #### Scenario: End-to-end tests
 - **WHEN** a developer runs `task test:e2e`
 - **THEN** Playwright browser tests execute from the `frontend/` directory (or a stub message prints)
+
+### Requirement: Integration tests task runs real tests
+The Taskfile SHALL define a `test:int` task that runs `go test -tags=integration ./...` from the `backend/` directory (not a stub).
+
+#### Scenario: Integration tests run with real Postgres
+- **WHEN** a developer runs `task test:int` with Docker available
+- **THEN** `go test -tags=integration ./...` executes from the `backend/` directory and testcontainers starts a real Postgres instance for the tests
+
+#### Scenario: Integration tests exit non-zero on failure
+- **WHEN** one or more integration tests fail
+- **THEN** `task test:int` exits with a non-zero status code
 
 ### Requirement: Generate tasks
 The Taskfile SHALL define `generate`, `generate:proto`, and `generate:sqlc` tasks.

@@ -1,0 +1,391 @@
+name: CI
+
+on:
+  pull_request:
+  merge_group:
+
+jobs:
+  # ── Lint ────────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write  # needed for PR annotations and lint comment
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0  # full history required for buf breaking and golangci-lint diff
+
+      # Go is needed for golangci-lint to resolve module deps
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version-file: backend/go.mod
+          cache: false  # golangci-lint-action manages its own cache
+
+      - name: Install Task
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install buf
+        uses: bufbuild/buf-setup-action@a47c93e0b1648d5651a065437926377d060baa99 # v1.50.0
+
+      - name: Install sqlc
+        # SHA256 sourced by downloading the tarball and running:
+        #   curl -sL https://github.com/sqlc-dev/sqlc/releases/download/v1.30.0/sqlc_1.30.0_linux_amd64.tar.gz | shasum -a 256
+        # Update both the URL and hash when bumping the version.
+        run: |
+          curl -sSL -o /tmp/sqlc.tar.gz \
+            https://github.com/sqlc-dev/sqlc/releases/download/v1.30.0/sqlc_1.30.0_linux_amd64.tar.gz
+          echo "468aecee071bfe55e97fcbcac52ea0208eeca444f67736f3b8f0f3d6a106132e  /tmp/sqlc.tar.gz" | sha256sum -c
+          tar -xz -C /usr/local/bin -f /tmp/sqlc.tar.gz sqlc
+
+      # Go linting via official action — provides analysis cache + PR annotations.
+      # install-mode: binary downloads a pre-built binary (seconds, not minutes).
+      # golangci-lint v2 delegates package loading to the system `go` binary, so the
+      # pre-built binary version does not need to match the project's Go version.
+      # version must be pinned so the action's binary cache key is stable across runs.
+      - name: Lint Go
+        id: lint-go
+        continue-on-error: true
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
+        with:
+          working-directory: backend
+          version: v2.10.1
+          install-mode: binary
+
+      # TypeScript + Svelte linting (ESLint + Prettier)
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        with:
+          version: latest
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: lts/*
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frontend deps
+        run: pnpm install --frozen-lockfile
+        working-directory: frontend
+
+      - name: Lint TypeScript
+        id: lint-ts
+        continue-on-error: true
+        run: |
+          set +e
+          output=$(task lint:ts 2>&1)
+          code=$?
+          set -e
+          echo "$output"
+          echo "output<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$output" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          if [ $code -eq 0 ]; then
+            echo "outcome=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "outcome=failure" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Lint Proto
+        id: lint-proto
+        continue-on-error: true
+        run: |
+          set +e
+          output=$(task lint:proto 2>&1)
+          code=$?
+          set -e
+          echo "$output"
+          echo "output<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$output" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          if [ $code -eq 0 ]; then
+            echo "outcome=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "outcome=failure" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check proto breaking changes
+        id: buf-breaking
+        continue-on-error: true
+        run: |
+          set +e
+          output=$(cd proto && buf breaking --against '../.git#branch=origin/main,subdir=proto' 2>&1)
+          code=$?
+          set -e
+          echo "$output"
+          echo "output<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$output" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          if [ $code -eq 0 ]; then
+            echo "outcome=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "outcome=failure" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify codegen is committed
+        id: verify-codegen
+        continue-on-error: true
+        run: |
+          set +e
+          gen_output=$(task generate 2>&1)
+          gen_code=$?
+          diff_output=$(git diff --exit-code 2>&1)
+          diff_code=$?
+          set -e
+          if [ $gen_code -ne 0 ]; then
+            output="$gen_output"
+            code=$gen_code
+          else
+            output="$diff_output"
+            code=$diff_code
+          fi
+          echo "$output"
+          echo "output<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$output" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          if [ $code -eq 0 ]; then
+            echo "outcome=success" >> "$GITHUB_OUTPUT"
+          else
+            echo "outcome=failure" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Upsert a single unified PR comment with all lint results.
+      # Linter outputs are passed via env vars (not interpolated into JS) to
+      # prevent injection if output contains backticks or template expressions.
+      - name: Post lint results comment
+        continue-on-error: true
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          LINT_TS_OUTCOME: ${{ steps.lint-ts.outputs.outcome }}
+          LINT_TS_OUTPUT: ${{ steps.lint-ts.outputs.output }}
+          LINT_PROTO_OUTCOME: ${{ steps.lint-proto.outputs.outcome }}
+          LINT_PROTO_OUTPUT: ${{ steps.lint-proto.outputs.output }}
+          BUF_BREAKING_OUTCOME: ${{ steps.buf-breaking.outputs.outcome }}
+          BUF_BREAKING_OUTPUT: ${{ steps.buf-breaking.outputs.output }}
+          VERIFY_CODEGEN_OUTCOME: ${{ steps.verify-codegen.outputs.outcome }}
+          VERIFY_CODEGEN_OUTPUT: ${{ steps.verify-codegen.outputs.output }}
+        with:
+          script: |
+            const hasLabel = context.payload.pull_request.labels.some(l => l.name === 'api:breaking-change');
+
+            const steps = [
+              { name: 'TypeScript lint',          outcome: process.env.LINT_TS_OUTCOME,       output: process.env.LINT_TS_OUTPUT },
+              { name: 'Proto lint',               outcome: process.env.LINT_PROTO_OUTCOME,    output: process.env.LINT_PROTO_OUTPUT },
+              { name: 'Proto breaking check',     outcome: process.env.BUF_BREAKING_OUTCOME,  output: process.env.BUF_BREAKING_OUTPUT },
+              { name: 'Verify codegen is committed', outcome: process.env.VERIFY_CODEGEN_OUTCOME, output: process.env.VERIFY_CODEGEN_OUTPUT },
+            ];
+
+            const breakingBypassed = steps.find(s => s.name === 'Proto breaking check').outcome === 'failure' && hasLabel;
+
+            const rows = steps.map(({ name, outcome, output }) => {
+              const bypassed = name === 'Proto breaking check' && breakingBypassed;
+              const ico = bypassed ? '⚠️' : outcome === 'success' ? '✅' : '❌';
+
+              const notes = [];
+              if (bypassed) notes.push('> **Bypassed** via `api:breaking-change` label — intentional breaking change acknowledged.');
+              if (name === 'Proto breaking check' && outcome === 'failure' && !bypassed) {
+                notes.push('> **To bypass:** Apply the `api:breaking-change` label to this PR if this breaking change is intentional.');
+              }
+
+              const detail = outcome === 'failure' && output
+                ? `\n<details><summary>Output</summary>\n\n\`\`\`\n${output}\n\`\`\`\n</details>`
+                : '';
+
+              return [`### ${ico} ${name}`, ...notes, detail].filter(Boolean).join('\n');
+            });
+
+            const allPassed = steps.every(({ name, outcome }) =>
+              outcome === 'success' || (name === 'Proto breaking check' && breakingBypassed)
+            );
+
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+            const body = [
+              '<!-- bartering-games-ci-lint -->',
+              `## CI Lint Results — ${allPassed ? '✅ All checks passed' : '❌ Some checks failed'}`,
+              '',
+              rows.join('\n\n'),
+              '',
+              `*Updated by run [#${process.env.GITHUB_RUN_NUMBER}](${runUrl})*`,
+            ].join('\n');
+
+            const marker = '<!-- bartering-games-ci-lint -->';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      # Hard-fail if any check failed (without a valid bypass).
+      # Prints each failure to the log so errors are visible without opening the PR comment.
+      - name: Fail on lint errors
+        if: |
+          steps.lint-go.outcome == 'failure' ||
+          steps.lint-ts.outputs.outcome == 'failure' ||
+          steps.lint-proto.outputs.outcome == 'failure' ||
+          steps.verify-codegen.outputs.outcome == 'failure' ||
+          (steps.buf-breaking.outputs.outcome == 'failure' &&
+           !contains(github.event.pull_request.labels.*.name, 'api:breaking-change'))
+        env:
+          LINT_GO_OUTCOME: ${{ steps.lint-go.outcome }}
+          LINT_TS_OUTCOME: ${{ steps.lint-ts.outputs.outcome }}
+          LINT_TS_OUTPUT: ${{ steps.lint-ts.outputs.output }}
+          LINT_PROTO_OUTCOME: ${{ steps.lint-proto.outputs.outcome }}
+          LINT_PROTO_OUTPUT: ${{ steps.lint-proto.outputs.output }}
+          BUF_BREAKING_OUTCOME: ${{ steps.buf-breaking.outputs.outcome }}
+          BUF_BREAKING_OUTPUT: ${{ steps.buf-breaking.outputs.output }}
+          VERIFY_CODEGEN_OUTCOME: ${{ steps.verify-codegen.outputs.outcome }}
+          VERIFY_CODEGEN_OUTPUT: ${{ steps.verify-codegen.outputs.output }}
+        run: |
+          if [ "$LINT_GO_OUTCOME" = "failure" ]; then
+            echo "::error title=Go lint::golangci-lint reported violations (see annotations on the Lint Go step)"
+          fi
+          if [ "$LINT_TS_OUTCOME" = "failure" ]; then
+            echo "::error title=TypeScript lint::ESLint/Prettier reported violations"
+            echo "$LINT_TS_OUTPUT"
+          fi
+          if [ "$LINT_PROTO_OUTCOME" = "failure" ]; then
+            echo "::error title=Proto lint::buf lint reported violations"
+            echo "$LINT_PROTO_OUTPUT"
+          fi
+          if [ "$BUF_BREAKING_OUTCOME" = "failure" ]; then
+            echo "::error title=Proto breaking change::buf breaking detected backward-incompatible changes"
+            echo "$BUF_BREAKING_OUTPUT"
+          fi
+          if [ "$VERIFY_CODEGEN_OUTCOME" = "failure" ]; then
+            echo "::error title=Codegen not committed::Generated code is stale — run 'task generate' and commit the result"
+            echo "$VERIFY_CODEGEN_OUTPUT"
+          fi
+          exit 1
+
+  # ── Check OpenSpec archived ─────────────────────────────────────────────────
+  check-openspec-archived:
+    name: All OpenSpec changes archived
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request' && github.base_ref == 'main') ||
+      (github.event_name == 'merge_group' && startsWith(github.event.merge_group.base_ref, 'refs/heads/main'))
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Check for unarchived OpenSpec changes
+        run: |
+          unarchived=$(find openspec/changes -name '.openspec.yaml' \
+            ! -path 'openspec/changes/archive/*')
+
+          if [ -n "$unarchived" ]; then
+            echo "::error::Unarchived OpenSpec changes found. Archive them before merging:"
+            echo "$unarchived" | sed 's|openspec/changes/||' | sed 's|/.openspec.yaml||' | \
+              while read -r change; do
+                echo "  - openspec/changes/$change"
+              done
+            exit 1
+          fi
+
+          echo "All OpenSpec changes are archived."
+
+  # ── Test (Go) ───────────────────────────────────────────────────────────────
+  test-go:
+    name: Test (Go)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version-file: backend/go.mod
+
+      - name: Install Task
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Go modules
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('backend/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      # Cache the Postgres Docker image to avoid a full registry pull each run
+      - name: Cache Postgres Docker image
+        id: docker-cache
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: /tmp/postgres-image.tar
+          key: docker-postgres-17
+
+      - name: Load Postgres image from cache
+        if: steps.docker-cache.outputs.cache-hit == 'true'
+        run: docker load -i /tmp/postgres-image.tar
+
+      - name: Pull and cache Postgres image
+        if: steps.docker-cache.outputs.cache-hit != 'true'
+        run: |
+          docker pull postgres:17
+          docker save postgres:17 -o /tmp/postgres-image.tar
+
+      - name: Run unit tests
+        run: task test:go
+        working-directory: backend
+
+      - name: Run integration tests
+        run: task test:int
+        working-directory: backend
+
+  # ── Test (TypeScript) ───────────────────────────────────────────────────────
+  test-ts:
+    name: Test (TypeScript)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Task
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        with:
+          version: latest
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: lts/*
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: frontend
+
+      - name: Run TypeScript tests
+        run: task test:ts
+        working-directory: frontend
