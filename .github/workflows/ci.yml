@@ -233,7 +233,8 @@ jobs:
               });
             }
 
-      # Hard-fail if any check failed (without a valid bypass)
+      # Hard-fail if any check failed (without a valid bypass).
+      # Prints each failure to the log so errors are visible without opening the PR comment.
       - name: Fail on lint errors
         if: |
           steps.lint-go.outcome == 'failure' ||
@@ -242,8 +243,36 @@ jobs:
           steps.verify-codegen.outputs.outcome == 'failure' ||
           (steps.buf-breaking.outputs.outcome == 'failure' &&
            !contains(github.event.pull_request.labels.*.name, 'api:breaking-change'))
+        env:
+          LINT_GO_OUTCOME: ${{ steps.lint-go.outcome }}
+          LINT_TS_OUTCOME: ${{ steps.lint-ts.outputs.outcome }}
+          LINT_TS_OUTPUT: ${{ steps.lint-ts.outputs.output }}
+          LINT_PROTO_OUTCOME: ${{ steps.lint-proto.outputs.outcome }}
+          LINT_PROTO_OUTPUT: ${{ steps.lint-proto.outputs.output }}
+          BUF_BREAKING_OUTCOME: ${{ steps.buf-breaking.outputs.outcome }}
+          BUF_BREAKING_OUTPUT: ${{ steps.buf-breaking.outputs.output }}
+          VERIFY_CODEGEN_OUTCOME: ${{ steps.verify-codegen.outputs.outcome }}
+          VERIFY_CODEGEN_OUTPUT: ${{ steps.verify-codegen.outputs.output }}
         run: |
-          echo "One or more lint checks failed. See the PR comment for details."
+          if [ "$LINT_GO_OUTCOME" = "failure" ]; then
+            echo "::error title=Go lint::golangci-lint reported violations (see annotations on the Lint Go step)"
+          fi
+          if [ "$LINT_TS_OUTCOME" = "failure" ]; then
+            echo "::error title=TypeScript lint::ESLint/Prettier reported violations"
+            echo "$LINT_TS_OUTPUT"
+          fi
+          if [ "$LINT_PROTO_OUTCOME" = "failure" ]; then
+            echo "::error title=Proto lint::buf lint reported violations"
+            echo "$LINT_PROTO_OUTPUT"
+          fi
+          if [ "$BUF_BREAKING_OUTCOME" = "failure" ]; then
+            echo "::error title=Proto breaking change::buf breaking detected backward-incompatible changes"
+            echo "$BUF_BREAKING_OUTPUT"
+          fi
+          if [ "$VERIFY_CODEGEN_OUTCOME" = "failure" ]; then
+            echo "::error title=Codegen not committed::Generated code is stale — run 'task generate' and commit the result"
+            echo "$VERIFY_CODEGEN_OUTPUT"
+          fi
           exit 1
 
   # ── Check OpenSpec archived ─────────────────────────────────────────────────
