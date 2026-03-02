@@ -37,20 +37,28 @@ The pre-commit hook SHALL run ESLint and Prettier check against staged `.ts`, `.
 - **WHEN** a staged `.ts` or `.svelte` file has a lint or formatting violation
 - **THEN** the commit is aborted and the violation is reported to the developer
 
-### Requirement: Pre-commit runs buf lint on staged proto files
-The pre-commit hook SHALL run `buf lint` when any `.proto` file is staged.
+### Requirement: Pre-commit runs buf lint and breaking check on staged proto files
+The pre-commit hook SHALL run both `buf lint` and `buf breaking --against .git#branch=main` when any `.proto` file is staged.
 
-#### Scenario: Proto file staged
+#### Scenario: Proto file staged — lint passes, no breaking changes
 - **WHEN** one or more `.proto` files are staged and the developer runs `git commit`
-- **THEN** `buf lint` executes from the `proto/` directory
-
-#### Scenario: No proto files staged
-- **WHEN** no `.proto` files are staged
-- **THEN** the buf lint step is skipped entirely
+- **THEN** both `buf lint` and `buf breaking` execute from the `proto/` directory and both pass
 
 #### Scenario: Proto lint violation blocks commit
 - **WHEN** a staged `.proto` file has a lint violation
 - **THEN** the commit is aborted and the violation is reported to the developer
+
+#### Scenario: Breaking proto change blocks commit
+- **WHEN** a staged `.proto` file introduces a backward-incompatible change relative to `main`
+- **THEN** the commit is aborted and the breaking change is reported to the developer
+
+#### Scenario: Intentional breaking change bypass
+- **WHEN** a developer intentionally introduces a breaking proto change and runs `LEFTHOOK_SKIP=lint-proto-breaking git commit`
+- **THEN** the breaking check is skipped and the commit proceeds (buf lint still runs)
+
+#### Scenario: No proto files staged
+- **WHEN** no `.proto` files are staged
+- **THEN** both buf steps are skipped entirely
 
 ### Requirement: Hook installation is idempotent
 Running the install command multiple times SHALL produce the same result without error.
