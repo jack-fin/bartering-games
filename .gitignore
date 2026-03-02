@@ -17,6 +17,9 @@ build/
 dist/
 *.tsbuildinfo
 
+# Claude Code tooling
+.playwright-mcp/
+
 # IDE (do NOT ignore .vscode — it's committed for shared config)
 .idea/
 *.swp
