@@ -5,7 +5,7 @@ The project has pre-commit hooks for local quality gates, but nothing enforces c
 ## What Changes
 
 - Add `.github/workflows/ci.yml` with three parallel jobs: `lint`, `test-go`, and `test-ts`
-- `lint` job runs all linters (Go, TypeScript, Proto, DB) plus a generated-code freshness check
+- `lint` job runs all linters (Go, TypeScript, Proto, DB) plus a verify-codegen-is-committed check
 - `test-go` job runs unit tests and integration tests (via testcontainers) against real Postgres
 - `test-ts` job runs Vitest unit tests with pnpm
 - Go module cache and pnpm store cached across runs to reduce CI time
@@ -14,7 +14,7 @@ The project has pre-commit hooks for local quality gates, but nothing enforces c
 ## Capabilities
 
 ### New Capabilities
-- `ci-pipeline`: GitHub Actions workflow that enforces linting, freshness, and testing on every push and pull request
+- `ci-pipeline`: GitHub Actions workflow that enforces linting, codegen verification, and testing on every push and pull request
 
 ### Modified Capabilities
 - `pre-commit-hooks`: Add `buf breaking --against .git#branch=main` to the proto pre-commit check, so breaking changes are caught locally before push

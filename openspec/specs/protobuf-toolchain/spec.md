@@ -62,6 +62,6 @@ Generated code in `backend/gen/` and `frontend/gen/` SHALL be committed to the G
 - **WHEN** a developer clones the repository
 - **THEN** `backend/gen/bartering/v1/` and `frontend/gen/bartering/v1/` contain generated files without needing to run `buf generate`
 
-#### Scenario: Generated code freshness
+#### Scenario: Generated code matches what is committed
 - **WHEN** `buf generate` runs on unchanged proto files
 - **THEN** `git diff` shows no changes (generated code matches what is committed)

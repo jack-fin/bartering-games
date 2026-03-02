@@ -148,6 +148,6 @@ directly asks for it.
 - **Server-side sessions**: Hashed tokens in Postgres, HttpOnly cookies. No JWTs.
   Session lookup per request (~0.2ms). Instant revocation on logout/compromise.
 - **Generated code checked into Git**: Both protobuf (backend/gen/, frontend/gen/) and
-  sqlc (backend/internal/storage/db/) output is committed. CI validates freshness.
+  sqlc (backend/internal/storage/db/) output is committed. CI verifies codegen is committed.
 - **Housekeeping**: Remove `.gitkeep` placeholder files from directories once real
   content is added.

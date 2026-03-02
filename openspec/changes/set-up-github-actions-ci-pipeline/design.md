@@ -7,7 +7,7 @@ Current state of `task test:int`: stubbed — prints a message instead of runnin
 ## Goals / Non-Goals
 
 **Goals:**
-- Enforce lint + freshness + tests on every push and PR via GitHub Actions
+- Enforce lint + codegen verification + tests on every push and PR via GitHub Actions
 - Mirror local dev exactly: CI calls `task lint`, `task test:go`, etc. — no duplicate command definitions
 - Add `buf breaking --against .git#branch=main` to both CI and pre-commit hooks, with a PR label bypass mechanism
 - Wire up `task test:int` to actually run `go test -tags=integration ./...`
@@ -35,11 +35,11 @@ For all other linters (buf, ESLint, Prettier), no equivalent official action wit
 
 ### D2: Three parallel jobs — lint, test-go, test-ts
 
-The lint job runs all linters plus the generated-code freshness check. `test-go` and `test-ts` run independently in parallel. `test-go` runs unit tests first, then integration tests sequentially within the same job (they share the same Go build cache and Docker environment).
+The lint job runs all linters plus the verify-codegen-is-committed check. `test-go` and `test-ts` run independently in parallel. `test-go` runs unit tests first, then integration tests sequentially within the same job (they share the same Go build cache and Docker environment).
 
 **Rationale**: Lint failures are fast to detect and shouldn't block test jobs. Integration tests need Docker, which is available on `ubuntu-latest` runners.
 
-### D3: Freshness check via generate + diff
+### D3: Verify codegen is committed via generate + diff
 
 After running `task generate` (buf + sqlc), the job runs `git diff --exit-code`. A non-empty diff means generated code was not checked in up to date.
 
@@ -47,7 +47,7 @@ After running `task generate` (buf + sqlc), the job runs `git diff --exit-code`.
 
 ### D4: Unified PR lint comment — updated on re-run, not duplicated
 
-All non-golangci-lint linters (`task lint:ts`, `task lint:proto`, `buf breaking`, freshness check) post their results as a **single unified PR comment** that is updated (not re-created) on each CI run.
+All non-golangci-lint linters (`task lint:ts`, `task lint:proto`, `buf breaking`, verify-codegen check) post their results as a **single unified PR comment** that is updated (not re-created) on each CI run.
 
 **Implementation**:
 - Each lint step runs with `continue-on-error: true` and captures stdout/stderr into a step output

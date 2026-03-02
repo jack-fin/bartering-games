@@ -9,7 +9,7 @@
 - [x] 2.1 Create `.github/workflows/ci.yml` with top-level trigger on `push` and `pull_request` for all branches
 - [x] 2.2 Add the `lint` job: setup Go, use `golangci/golangci-lint-action` (annotations enabled), install buf + sqlc for remaining linter steps
 - [x] 2.3 Add `task lint:ts` and `task lint:proto` steps to `lint` job with `continue-on-error: true`
-- [x] 2.4 Add freshness check step to `lint` job: run `task generate`, then `git diff --exit-code`, with `continue-on-error: true`
+- [x] 2.4 Add verify-codegen-is-committed step to `lint` job: run `task generate`, then `git diff --exit-code`, with `continue-on-error: true`
 - [x] 2.5 Add `buf breaking` step to `lint` job with `continue-on-error: true`; include label-bypass logic (`api:breaking-change`)
 - [x] 2.6 Add unified PR lint comment step via `actions/github-script`: collects outcomes + outputs from steps 2.3–2.5, upserts a single comment (search for `<!-- bartering-games-ci-lint -->` marker, update if found, create if not), then hard-fails the job if any step failed without a valid bypass
 - [x] 2.7 Add `check-openspec-archived` job to `ci.yml` (scoped to `pull_request` targeting `main` only); copy logic from existing `check-openspec-archived.yml`

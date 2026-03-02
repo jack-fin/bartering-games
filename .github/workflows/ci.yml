@@ -34,14 +34,21 @@ jobs:
         uses: bufbuild/buf-setup-action@a47c93e0b1648d5651a065437926377d060baa99 # v1.50.0
 
       - name: Install sqlc
+        # SHA256 sourced by downloading the tarball and running:
+        #   curl -sL https://github.com/sqlc-dev/sqlc/releases/download/v1.30.0/sqlc_1.30.0_linux_amd64.tar.gz | shasum -a 256
+        # Update both the URL and hash when bumping the version.
         run: |
-          curl -sSL https://github.com/sqlc-dev/sqlc/releases/download/v1.30.0/sqlc_1.30.0_linux_amd64.tar.gz \
-            | tar -xz -C /usr/local/bin sqlc
+          curl -sSL -o /tmp/sqlc.tar.gz \
+            https://github.com/sqlc-dev/sqlc/releases/download/v1.30.0/sqlc_1.30.0_linux_amd64.tar.gz
+          echo "468aecee071bfe55e97fcbcac52ea0208eeca444f67736f3b8f0f3d6a106132e  /tmp/sqlc.tar.gz" | sha256sum -c
+          tar -xz -C /usr/local/bin -f /tmp/sqlc.tar.gz sqlc
 
       # Go linting via official action — provides analysis cache + PR annotations.
       # install-mode: goinstall compiles golangci-lint from source using the project's
       # Go version, required because pre-built binaries lag behind Go releases.
       - name: Lint Go
+        id: lint-go
+        continue-on-error: true
         uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
           working-directory: backend
@@ -116,8 +123,8 @@ jobs:
             echo "outcome=failure" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check generated code freshness
-        id: freshness
+      - name: Verify codegen is committed
+        id: verify-codegen
         continue-on-error: true
         run: |
           set +e
@@ -147,7 +154,7 @@ jobs:
       # Linter outputs are passed via env vars (not interpolated into JS) to
       # prevent injection if output contains backticks or template expressions.
       - name: Post lint results comment
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           LINT_TS_OUTCOME: ${{ steps.lint-ts.outputs.outcome }}
@@ -156,8 +163,8 @@ jobs:
           LINT_PROTO_OUTPUT: ${{ steps.lint-proto.outputs.output }}
           BUF_BREAKING_OUTCOME: ${{ steps.buf-breaking.outputs.outcome }}
           BUF_BREAKING_OUTPUT: ${{ steps.buf-breaking.outputs.output }}
-          FRESHNESS_OUTCOME: ${{ steps.freshness.outputs.outcome }}
-          FRESHNESS_OUTPUT: ${{ steps.freshness.outputs.output }}
+          VERIFY_CODEGEN_OUTCOME: ${{ steps.verify-codegen.outputs.outcome }}
+          VERIFY_CODEGEN_OUTPUT: ${{ steps.verify-codegen.outputs.output }}
         with:
           script: |
             const hasLabel = context.payload.pull_request.labels.some(l => l.name === 'api:breaking-change');
@@ -166,7 +173,7 @@ jobs:
               { name: 'TypeScript lint',          outcome: process.env.LINT_TS_OUTCOME,       output: process.env.LINT_TS_OUTPUT },
               { name: 'Proto lint',               outcome: process.env.LINT_PROTO_OUTCOME,    output: process.env.LINT_PROTO_OUTPUT },
               { name: 'Proto breaking check',     outcome: process.env.BUF_BREAKING_OUTCOME,  output: process.env.BUF_BREAKING_OUTPUT },
-              { name: 'Generated code freshness', outcome: process.env.FRESHNESS_OUTCOME,     output: process.env.FRESHNESS_OUTPUT },
+              { name: 'Verify codegen is committed', outcome: process.env.VERIFY_CODEGEN_OUTCOME, output: process.env.VERIFY_CODEGEN_OUTPUT },
             ];
 
             const breakingBypassed = steps.find(s => s.name === 'Proto breaking check').outcome === 'failure' && hasLabel;
@@ -229,9 +236,10 @@ jobs:
       # Hard-fail if any check failed (without a valid bypass)
       - name: Fail on lint errors
         if: |
+          steps.lint-go.outcome == 'failure' ||
           steps.lint-ts.outputs.outcome == 'failure' ||
           steps.lint-proto.outputs.outcome == 'failure' ||
-          steps.freshness.outputs.outcome == 'failure' ||
+          steps.verify-codegen.outputs.outcome == 'failure' ||
           (steps.buf-breaking.outputs.outcome == 'failure' &&
            !contains(github.event.pull_request.labels.*.name, 'api:breaking-change'))
         run: |

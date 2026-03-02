@@ -15,7 +15,5 @@ func (h *HealthHandler) Check(
 	_ context.Context,
 	_ *connect.Request[pb.CheckRequest],
 ) (*connect.Response[pb.CheckResponse], error) {
-	return connect.NewResponse(&pb.CheckResponse{
-		Status: pb.ServingStatus_SERVING_STATUS_SERVING,
-	}), nil
+	return connect.NewResponse(&pb.CheckResponse{}), nil
 }

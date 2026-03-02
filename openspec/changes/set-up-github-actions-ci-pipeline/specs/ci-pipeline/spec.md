@@ -27,7 +27,7 @@ The CI workflow SHALL include a `lint` job that runs Go, TypeScript, and Proto l
 - **THEN** the violation appears as an inline annotation on the PR diff
 
 ### Requirement: Unified PR lint comment with upsert behavior
-The `lint` job SHALL post a single PR comment summarising the outcome of all non-golangci-lint checks (TypeScript lint, Proto lint, buf breaking, freshness). On each re-run the comment SHALL be updated in place rather than a new comment being created.
+The `lint` job SHALL post a single PR comment summarising the outcome of all non-golangci-lint checks (TypeScript lint, Proto lint, buf breaking, codegen verification). On each re-run the comment SHALL be updated in place rather than a new comment being created.
 
 #### Scenario: Lint comment created on first run
 - **WHEN** the lint job runs on a pull request for the first time
@@ -49,12 +49,12 @@ The `lint` job SHALL post a single PR comment summarising the outcome of all non
 - **WHEN** the lint job runs on a direct push with no associated pull request
 - **THEN** no PR comment is posted
 
-### Requirement: Lint job checks generated code freshness
+### Requirement: Lint job verifies codegen is committed
 The `lint` job SHALL verify that generated protobuf and sqlc code is up to date by running `task generate` and then `git diff --exit-code`.
 
 #### Scenario: Generated code is up to date
 - **WHEN** all `.proto` and SQL query files match the checked-in generated output
-- **THEN** `git diff --exit-code` exits zero and the freshness check passes
+- **THEN** `git diff --exit-code` exits zero and the verify-codegen check passes
 
 #### Scenario: Generated code is stale
 - **WHEN** a `.proto` or SQL query file was modified without regenerating
