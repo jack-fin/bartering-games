@@ -30,3 +30,10 @@ pre-commit:
       root: "proto"
       # buf lint has no auto-fix — violations block the commit
       run: buf lint
+
+    lint-proto-breaking:
+      glob: "proto/**/*.proto"
+      root: "proto"
+      # Checks for backward-incompatible changes against main.
+      # To bypass intentionally: LEFTHOOK_SKIP=lint-proto-breaking git commit
+      run: buf breaking --against '.git#branch=main'
