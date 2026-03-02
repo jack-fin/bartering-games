@@ -9,7 +9,7 @@ tasks:
   lint:go:
     desc: Run Go linter (golangci-lint)
     dir: backend
-    cmd: echo "[lint:go] Not yet configured — will run golangci-lint"
+    cmd: golangci-lint run ./...
 
   lint:ts:
     desc: Run TypeScript linter (ESLint + Prettier)
@@ -97,6 +97,44 @@ tasks:
     cmds:
       - docker build -t bartering-backend ./backend
       - docker build -t bartering-frontend ./frontend
+
+  # ── Setup ──────────────────────────────────────────────────
+  deps:check:
+    desc: Verify all required developer tools are installed
+    cmd: |
+      ok=true
+      check() {
+        if command -v "$1" >/dev/null 2>&1; then
+          printf "  ✔  %-20s %s\n" "$1" "$(eval "$2" 2>/dev/null | head -1)"
+        else
+          printf "  ✘  %-20s not found — %s\n" "$1" "$3"
+          ok=false
+        fi
+      }
+      echo "Checking required tools..."
+      check go          "go version"                       "https://go.dev/dl (need 1.26+)"
+      check node        "node --version"                   "https://nodejs.org"
+      check pnpm        "pnpm --version"                   "npm install -g pnpm"
+      check task        "task --version"                   "brew install go-task"
+      check docker      "docker --version"                 "brew install colima && colima start"
+      check colima      "colima version"                   "brew install colima"
+      check buf         "buf --version"                    "brew install bufbuild/buf/buf"
+      check atlas       "atlas version"                    "brew install ariga/tap/atlas"
+      check sqlc        "sqlc version"                     "brew install sqlc"
+      check golangci-lint "golangci-lint --version"        "brew install golangci-lint"
+      check lefthook    "lefthook --version"               "brew install lefthook"
+      echo ""
+      if [ "$ok" = "true" ]; then
+        echo "All tools present."
+      else
+        echo "Install missing tools above, then re-run: task deps:check"
+        exit 1
+      fi
+
+  # ── Git Hooks ──────────────────────────────────────────────
+  hooks:install:
+    desc: Install git pre-commit hooks via lefthook (run once after cloning)
+    cmd: lefthook install
 
   # ── Development ────────────────────────────────────────────
   dev:

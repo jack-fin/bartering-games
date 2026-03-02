@@ -89,19 +89,37 @@ These three concerns are first-class requirements in every UI component, not fol
 
 All project tasks use Taskfile (`task` CLI):
 ```bash
-task lint          # Run all linters (Go + TS + Proto)
-task test          # Run all unit tests
-task test:go       # Go unit tests
-task test:ts       # TypeScript unit tests (Vitest)
-task test:int      # Integration tests (testcontainers, needs Docker)
-task test:e2e      # Playwright browser tests
-task generate      # Run all codegen (buf generate + sqlc generate)
+task hooks:install   # Install git pre-commit hooks (run once after cloning)
+task lint            # Run all linters (Go + TS + Proto)
+task test            # Run all unit tests
+task test:go         # Go unit tests
+task test:ts         # TypeScript unit tests (Vitest)
+task test:int        # Integration tests (testcontainers, needs Docker)
+task test:e2e        # Playwright browser tests
+task generate        # Run all codegen (buf generate + sqlc generate)
 task generate:proto  # buf generate only
 task generate:sqlc   # sqlc generate only
-task migrate       # Run Atlas migrations
-task migrate:diff  # Generate migration from schema.hcl diff (usage: task migrate:diff -- <name>)
-task dev           # Start local dev environment (docker-compose up + servers)
+task migrate         # Run Atlas migrations
+task migrate:diff    # Generate migration from schema.hcl diff (usage: task migrate:diff -- <name>)
+task dev             # Start local dev environment (docker-compose up + servers)
 ```
+
+## Pre-commit Hooks
+
+Pre-commit hooks run linters automatically on staged files before each commit.
+Install once after cloning:
+
+```bash
+brew install lefthook golangci-lint  # prerequisites
+task hooks:install
+```
+
+Hooks run in parallel and only check staged files — Go, TS/Svelte, and Proto each
+have their own linter triggered only when relevant files are staged.
+
+**Claude must never run `git commit --no-verify` without explicit user instruction.**
+If a pre-commit hook fails, fix the underlying issue. Only bypass hooks if the user
+directly asks for it.
 
 ## Testing
 
