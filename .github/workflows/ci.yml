@@ -114,6 +114,7 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
+          LINT_GO_OUTCOME: ${{ steps.lint-go.outcome }}
           LINT_TS_OUTCOME: ${{ steps.lint-ts.outputs.outcome }}
           LINT_TS_OUTPUT: ${{ steps.lint-ts.outputs.output }}
           VERIFY_CODEGEN_OUTCOME: ${{ steps.verify-codegen.outputs.outcome }}
@@ -121,6 +122,7 @@ jobs:
         with:
           script: |
             const steps = [
+              { name: 'Go lint',                        outcome: process.env.LINT_GO_OUTCOME,            output: 'See inline annotations on the Files changed tab.' },
               { name: 'TypeScript lint',                outcome: process.env.LINT_TS_OUTCOME,           output: process.env.LINT_TS_OUTPUT },
               { name: 'Verify codegen is committed',    outcome: process.env.VERIFY_CODEGEN_OUTCOME,    output: process.env.VERIFY_CODEGEN_OUTPUT },
             ];
