@@ -5,9 +5,9 @@ Domain: bartering.games
 
 ## Tech Stack
 
-- **Backend**: Go 1.26 (Chi router, Connect-go for RPC, sqlc for queries, pgx for dynamic SQL)
-- **Frontend**: SvelteKit (Svelte 5), TypeScript, pnpm
-- **API Contract**: Protobuf + Buf + Connect (`.proto` files are the source of truth)
+- **Backend**: Go 1.26 (Chi router, templ for HTML rendering, HTMX for SPA-like navigation, sqlc for queries, pgx for dynamic SQL)
+- **Frontend**: Server-rendered HTML via Go templ components, HTMX with `hx-boost` + head-support extension
+- **Vault**: Standalone TypeScript module (`vault-js/`) compiled by esbuild — client-side WebCrypto (AES-256-GCM, PBKDF2, RSA-OAEP)
 - **Database**: PostgreSQL, Atlas migrations (declarative HCL schema + versioned migrations), sqlc codegen
 - **Deployment**: Kamal 2 on Hetzner VPS, Docker images, Traefik for SSL
 - **Monitoring**: Prometheus + Grafana + Loki (self-hosted), Sentry, UptimeRobot
@@ -18,16 +18,22 @@ Monorepo layout:
 ```
 bartering-games/
 ├── CLAUDE.md
-├── .claude/rules/          # Path-scoped rules (frontend, backend, proto)
+├── .claude/rules/          # Path-scoped rules (backend, vault-js)
 ├── openspec/               # OpenSpec artifacts (changes, specs, proposals)
-├── proto/                  # Protobuf definitions (source of truth for API)
-│   ├── buf.yaml
-│   ├── buf.gen.yaml
-│   └── bartering/v1/
-├── backend/                # Go API server + background workers
+├── vault-js/               # Standalone TypeScript WebCrypto module
+│   ├── src/                # TypeScript source (index.ts, htmx-interception.ts)
+│   ├── package.json        # pnpm, esbuild + vitest devDeps, zero runtime deps
+│   └── vitest.config.ts
+├── backend/                # Go server (HTML + API + background workers)
 │   ├── cmd/server/
+│   │   ├── main.go         # Server entry point
+│   │   └── static/         # Embedded static assets (CSS, JS, vendor)
+│   │       ├── styles.css
+│   │       ├── vault.js    # Compiled vault-js output (esbuild IIFE)
+│   │       └── vendor/     # Vendored HTMX + extensions
 │   ├── internal/
-│   │   ├── handler/        # Connect RPC handlers
+│   │   ├── components/     # templ components (layout, nav, footer)
+│   │   │   └── pages/      # Page-level templ components (home, login)
 │   │   ├── service/        # Business logic
 │   │   ├── port/           # Interface definitions (adapters pattern)
 │   │   ├── adapter/        # Platform implementations (steam/, igdb/, itad/, manual/)
@@ -37,22 +43,13 @@ bartering-games/
 │   │   │   └── db/         # Generated Go (sqlc output)
 │   │   ├── worker/         # Background sync goroutines
 │   │   └── crypto/         # Server-side crypto utilities
-│   ├── gen/                # Generated protobuf Go code
 │   ├── migrations/         # Atlas versioned migration files
 │   ├── schema.hcl          # Declarative DB schema (Atlas source of truth)
 │   ├── atlas.hcl           # Atlas CLI config (envs, dev database)
 │   └── Dockerfile
-├── frontend/               # SvelteKit web UI
-│   ├── src/lib/
-│   │   ├── api/            # Connect client setup
-│   │   ├── vault/          # Client-side encryption (WebCrypto)
-│   │   └── components/
-│   ├── gen/                # Generated protobuf TS code
-│   ├── tests/e2e/          # Playwright browser tests
-│   └── Dockerfile
 ├── docker-compose.yaml     # Local dev (Postgres, Prometheus, Grafana, Loki)
 ├── Taskfile.yaml           # Task runner (use `task` not `make`)
-└── .github/workflows/      # CI/CD (planned, not yet created)
+└── .github/workflows/      # CI (lint, test-go, test-vault, openspec check)
 ```
 
 ## Build Output
@@ -60,6 +57,7 @@ bartering-games/
 - Go binaries go in `backend/bin/` (gitignored). Always use `go build -o bin/ ./cmd/...`
   when compiling manually. Never run `go build` without `-o bin/` — bare `go build`
   drops binaries in the source tree.
+- Vault JS output goes to `backend/cmd/server/static/vault.js` (compiled by esbuild from `vault-js/src/`).
 
 ## Code Style & Conventions
 
@@ -71,18 +69,20 @@ bartering-games/
 All project tasks use Taskfile (`task` CLI):
 ```bash
 task hooks:install   # Install git pre-commit hooks (run once after cloning)
-task lint            # Run all linters (Go + TS + Proto)
-task test            # Run all unit tests
+task lint            # Run all linters (Go + TypeScript)
+task test            # Run all unit tests (Go + vault-js)
 task test:go         # Go unit tests
-task test:ts         # TypeScript unit tests (Vitest)
+task test:vault      # vault-js unit tests (Vitest)
 task test:int        # Integration tests (testcontainers, needs Docker)
 task test:e2e        # Playwright browser tests
-task generate        # Run all codegen (buf generate + sqlc generate)
-task generate:proto  # buf generate only
+task generate        # Run all codegen (templ generate + sqlc generate)
+task generate:templ  # templ generate only
 task generate:sqlc   # sqlc generate only
+task build:vault     # Compile vault-js TypeScript → backend/cmd/server/static/vault.js
 task migrate         # Run Atlas migrations
 task migrate:diff    # Generate migration from schema.hcl diff (usage: task migrate:diff -- <name>)
-task dev             # Start local dev environment (docker-compose up + servers)
+task dev             # Start local dev environment (docker-compose up)
+task dev:backend     # Run Go backend server locally
 ```
 
 ## Pre-commit Hooks
@@ -91,7 +91,7 @@ Pre-commit hooks run linters automatically on staged files before each commit.
 Install once after cloning:
 
 ```bash
-brew install lefthook golangci-lint gopls typescript-language-server  # prerequisites
+brew install lefthook golangci-lint gopls  # prerequisites
 task hooks:install
 ```
 
@@ -103,12 +103,7 @@ Active plugins (installed via `claude-plugins-official` marketplace):
 - **Go**: `gopls-lsp` — requires `gopls` in PATH: `brew install gopls`
 - **TypeScript**: `typescript-lsp` — requires `typescript-language-server` in PATH: `brew install typescript-language-server`
 
-Note: `svelte-language-server` is a pnpm dev dep in `frontend/` for editor tooling (VS Code,
-Neovim, etc.) — it is version-pinned so all devs get the same server after `pnpm install`.
-`typescript-language-server` is installed via Homebrew (not a pnpm dep).
-No Svelte LSP plugin exists for Claude Code yet.
-
-Hooks run in parallel and only check staged files — Go, TS/Svelte, and Proto each
+Hooks run in parallel and only check staged files — Go and TypeScript each
 have their own linter triggered only when relevant files are staged.
 
 **Claude must never run `git commit --no-verify` without explicit user instruction.**
@@ -119,9 +114,9 @@ directly asks for it.
 
 - **Go unit tests**: `go test ./...` in `backend/`
 - **Go integration tests**: `go test -tags=integration ./...` (uses testcontainers for real Postgres)
-- **TS unit tests**: Vitest in `frontend/`
-- **Browser E2E**: Playwright in `frontend/tests/e2e/` (multi-context for two-user trade flows)
-- **CI** (GitHub Actions): lint + unit tests + integration tests. Browser E2E not in CI initially.
+- **vault-js unit tests**: Vitest in `vault-js/`
+- **Browser E2E**: Playwright (multi-context for two-user trade flows)
+- **CI** (GitHub Actions): lint + test-go + test-vault + openspec archived check
 
 ## Git Workflow
 
@@ -147,20 +142,25 @@ directly asks for it.
 ## Docker
 
 - The backend runtime image uses `gcr.io/distroless/static-debian12:nonroot` — no shell, no package manager, runs as UID 65532. For local debugging (`docker exec`), swap to `gcr.io/distroless/static-debian12:debug` which includes busybox.
-- The frontend runtime image uses `nginx:alpine` serving the SvelteKit static build. pnpm and Node.js are build-stage only. nginx worker processes (which serve traffic) run as the `nginx` user (non-root).
-- Build both images locally with `task docker:build`.
+- Single Docker image: the Go binary embeds static assets (CSS, JS, vendor scripts) via `//go:embed`. No separate frontend image.
+- Build the image with `task docker:build`.
 
 ## Architecture Patterns
 
 - **Ports and Adapters**: Business logic in `service/` depends on interfaces in `port/`.
   Implementations in `adapter/` (steam, igdb, itad, manual). Tests use mock adapters.
+- **Server-side rendering**: Go templ components render full HTML pages. HTMX `hx-boost`
+  provides SPA-like navigation by swapping `<body>` content via AJAX. The `head-support`
+  extension merges `<head>` elements across navigations.
 - **Client-side encryption**: Game keys encrypted in browser via WebCrypto (AES-256-GCM).
-  Server stores opaque blobs only. Trade auto-reveal via RSA-OAEP escrow.
+  Server stores opaque blobs only. Trade auto-reveal via RSA-OAEP escrow. Vault JS
+  intercepts HTMX form submissions via `htmx:configRequest` to encrypt data before sending.
+  The vault key persists in JS memory across `hx-boost` navigations (no page reload).
 - **Background workers**: Go goroutines for Steam library sync, wishlist sync, game
   enrichment, bundle data. Heartbeat table for monitoring.
 - **Server-side sessions**: Hashed tokens in Postgres, HttpOnly cookies. No JWTs.
   Session lookup per request (~0.2ms). Instant revocation on logout/compromise.
-- **Generated code checked into Git**: Both protobuf (backend/gen/, frontend/gen/) and
-  sqlc (backend/internal/storage/db/) output is committed. CI verifies codegen is committed.
+- **Generated code checked into Git**: templ (`_templ.go`), sqlc (`backend/internal/storage/db/`),
+  and vault-js (`backend/cmd/server/static/vault.js`) output is committed. CI verifies codegen is committed.
 - **Housekeeping**: Remove `.gitkeep` placeholder files from directories once real
   content is added.

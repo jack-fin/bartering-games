@@ -3,11 +3,10 @@ module github.com/jack-fin/bartering-games/backend
 go 1.26.0
 
 require (
-	connectrpc.com/connect v1.19.1
+	github.com/a-h/templ v0.3.1001
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/go-chi/cors v1.2.2
 	github.com/jackc/pgx/v5 v5.8.0
-	google.golang.org/protobuf v1.36.11
 )
 
 require (

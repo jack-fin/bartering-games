@@ -21,7 +21,18 @@ except Exception:
 
 if echo "${cmd}" | grep -qE '^(git commit|git push|gh pr create|gh pr edit)'; then
   rc=0
-  bash .claude/hooks/check-shortcut-branch.sh >&2 || rc=1
-  bash .claude/hooks/check-openspec-archived.sh >&2 || rc=1
+  bash .claude/hooks/check-shortcut-branch.sh >&2
+  sub=$?
+  # Preserve exit 2 (non-blocking warning) from sub-scripts; only block on exit 1.
+  [ "$sub" -eq 1 ] && rc=1
+  [ "$sub" -eq 2 ] && [ "$rc" -eq 0 ] && rc=2
+
+  bash .claude/hooks/check-openspec-archived.sh >&2
+  sub=$?
+  [ "$sub" -eq 1 ] && rc=1
+  [ "$sub" -eq 2 ] && [ "$rc" -eq 0 ] && rc=2
+
   exit $rc
 fi
+
+exit 0

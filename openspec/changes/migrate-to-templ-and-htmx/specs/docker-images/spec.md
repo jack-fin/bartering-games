@@ -1,0 +1,34 @@
+## MODIFIED Requirements
+
+### Requirement: Backend Dockerfile exists
+The repository SHALL contain a `backend/Dockerfile` that produces a production-ready container image for the Go server. The image SHALL include embedded static assets (CSS, JavaScript, vendor scripts) compiled into the Go binary.
+
+#### Scenario: Backend image builds successfully
+- **WHEN** a developer runs `docker build -t bartering-backend ./backend`
+- **THEN** the build completes without errors
+
+#### Scenario: Backend image uses multi-stage build
+- **WHEN** the backend image is built
+- **THEN** the final image SHALL NOT contain Go toolchain, build tools, or source code
+
+#### Scenario: Backend binary is statically linked
+- **WHEN** the Go binary is compiled in the build stage
+- **THEN** it SHALL be compiled with `CGO_ENABLED=0` and `GOOS=linux`
+
+#### Scenario: Backend runs as non-root
+- **WHEN** a container is started from the backend image
+- **THEN** the process SHALL run as a non-root user (UID != 0)
+
+#### Scenario: Backend image declares a health check
+- **WHEN** the backend image is inspected
+- **THEN** it SHALL have a `HEALTHCHECK` instruction targeting the `/healthz` endpoint
+
+#### Scenario: Static assets are served from the image
+- **WHEN** a container is started and a client requests `/static/styles.css`
+- **THEN** the Go binary serves the embedded static asset without requiring files on the filesystem
+
+## REMOVED Requirements
+
+### Requirement: Frontend Dockerfile exists
+**Reason**: The SvelteKit frontend is removed. The Go binary serves HTML and static assets directly. There is no separate frontend image.
+**Migration**: All frontend concerns (HTML rendering, CSS, JavaScript) are handled by the Go server with templ components and embedded static assets.

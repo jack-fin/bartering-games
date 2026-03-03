@@ -3,8 +3,8 @@ version: '3'
 tasks:
   # ── Linting ────────────────────────────────────────────────
   lint:
-    desc: Run all linters (Go + TypeScript + Proto)
-    deps: [lint:go, lint:ts, lint:proto]
+    desc: Run all linters (Go + TypeScript)
+    deps: [lint:go, lint:ts]
 
   lint:go:
     desc: Run Go linter (golangci-lint)
@@ -12,16 +12,11 @@ tasks:
     cmd: golangci-lint run ./...
 
   lint:ts:
-    desc: Run TypeScript linter (ESLint + Prettier)
-    dir: frontend
+    desc: Run TypeScript linter (ESLint + Prettier) for vault-js
+    dir: vault-js
     cmds:
       - pnpm eslint .
       - pnpm prettier --check .
-
-  lint:proto:
-    desc: Run Proto linter (buf lint)
-    dir: proto
-    cmd: buf lint
 
   # ── Fixing / Formatting ──────────────────────────────────
   fix:
@@ -30,24 +25,24 @@ tasks:
 
   fix:ts:
     desc: Auto-fix TypeScript lint and formatting issues
-    dir: frontend
+    dir: vault-js
     cmds:
       - pnpm eslint --fix .
       - pnpm prettier --write .
 
   # ── Testing ────────────────────────────────────────────────
   test:
-    desc: Run all unit tests (Go + TypeScript)
-    deps: [test:go, test:ts]
+    desc: Run all unit tests (Go + vault-js)
+    deps: [test:go, test:vault]
 
   test:go:
     desc: Run Go unit tests
     dir: backend
     cmd: go test ./...
 
-  test:ts:
-    desc: Run TypeScript unit tests (Vitest)
-    dir: frontend
+  test:vault:
+    desc: Run vault-js unit tests (Vitest)
+    dir: vault-js
     cmd: pnpm vitest run
 
   test:int:
@@ -57,23 +52,37 @@ tasks:
 
   test:e2e:
     desc: Run Playwright browser tests
-    dir: frontend
     cmd: echo "[test:e2e] Not yet configured — will run playwright test"
 
   # ── Code Generation ────────────────────────────────────────
   generate:
-    desc: Run all codegen (buf generate + sqlc generate)
-    deps: [generate:proto, generate:sqlc]
+    desc: Run all codegen (templ generate + sqlc generate)
+    deps: [generate:templ, generate:sqlc]
 
-  generate:proto:
-    desc: Generate protobuf code (buf generate)
-    dir: proto
-    cmd: buf generate
+  generate:templ:
+    desc: Generate Go code from templ components
+    dir: backend
+    cmd: go run github.com/a-h/templ/cmd/templ@v0.3.1001 generate
 
   generate:sqlc:
     desc: Generate sqlc code
     dir: backend/internal/storage
     cmd: sqlc generate
+
+  # ── Build ────────────────────────────────────────────────
+  build:
+    desc: Build Go backend binary
+    dir: backend
+    cmd: go build -o bin/server ./cmd/server/
+
+  build:vault:
+    desc: Compile vault-js TypeScript to backend/cmd/server/static/vault.js
+    dir: vault-js
+    cmd: pnpm run build
+
+  docker:build:
+    desc: Build backend Docker image
+    cmd: docker build -t bartering-backend ./backend
 
   # ── Database ───────────────────────────────────────────────
   "migrate":
@@ -85,18 +94,6 @@ tasks:
     desc: "Generate a new migration from schema.hcl diff (usage: task migrate:diff -- <name>)"
     dir: backend
     cmd: "atlas migrate diff {{.CLI_ARGS}} --env local"
-
-  # ── Build ────────────────────────────────────────────────
-  build:
-    desc: Build Go backend binary
-    dir: backend
-    cmd: go build -o bin/server ./cmd/server/
-
-  docker:build:
-    desc: Build backend and frontend Docker images
-    cmds:
-      - docker build -t bartering-backend ./backend
-      - docker build -t bartering-frontend ./frontend
 
   # ── Setup ──────────────────────────────────────────────────
   deps:check:
@@ -113,12 +110,11 @@ tasks:
       }
       echo "Checking required tools..."
       check go          "go version"                       "https://go.dev/dl (need 1.26+)"
-      check node        "node --version"                   "https://nodejs.org"
       check pnpm        "pnpm --version"                   "npm install -g pnpm"
       check task        "task --version"                   "brew install go-task"
       check docker      "docker --version"                 "brew install colima && colima start"
       check colima      "colima version"                   "brew install colima"
-      check buf         "buf --version"                    "brew install bufbuild/buf/buf"
+      check templ       "templ version"                    "go install github.com/a-h/templ/cmd/templ@latest (optional — task uses go run)"
       check atlas       "atlas version"                    "brew install ariga/tap/atlas"
       check sqlc        "sqlc version"                     "brew install sqlc"
       check golangci-lint "golangci-lint --version"        "brew install golangci-lint"
@@ -145,8 +141,3 @@ tasks:
     desc: Run Go backend server locally
     dir: backend
     cmd: go run ./cmd/server/
-
-  dev:frontend:
-    desc: Run SvelteKit dev server
-    dir: frontend
-    cmd: pnpm dev
