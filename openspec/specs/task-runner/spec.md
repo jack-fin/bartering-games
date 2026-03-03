@@ -1,188 +1,100 @@
-## ADDED Requirements
-
-### Requirement: Taskfile exists at repo root
-The repo SHALL contain a `Taskfile.yaml` at the repository root using Taskfile v3 syntax (`version: '3'`).
-
-#### Scenario: Taskfile is valid
-- **WHEN** a developer runs `task --list` from the repo root
-- **THEN** all defined tasks are listed without parse errors
+## MODIFIED Requirements
 
 ### Requirement: Lint task
-The Taskfile SHALL define a `lint` task that runs all linters (Go, TypeScript, Proto).
+The Taskfile SHALL define a `lint` task that runs all linters (Go and vault-js TypeScript). Proto linting is removed.
 
 #### Scenario: Lint task runs sub-linters
 - **WHEN** a developer runs `task lint`
-- **THEN** Go, TypeScript, and Proto linters all execute
+- **THEN** Go and vault-js TypeScript linters execute
 
 ### Requirement: Test tasks
-The Taskfile SHALL define `test`, `test:go`, `test:ts`, `test:int`, and `test:e2e` tasks.
+The Taskfile SHALL define `test`, `test:go`, `test:vault`, `test:int`, and `test:e2e` tasks. The `test:ts` task (Vitest for SvelteKit) is replaced by `test:vault` (Vitest for vault-js).
 
 #### Scenario: Aggregate test task runs sub-tasks
 - **WHEN** a developer runs `task test`
-- **THEN** both `test:go` and `test:ts` execute
+- **THEN** both `test:go` and `test:vault` execute
 
 #### Scenario: Go unit tests
 - **WHEN** a developer runs `task test:go`
 - **THEN** `go test ./...` executes from the `backend/` directory
 
-#### Scenario: TypeScript unit tests
-- **WHEN** a developer runs `task test:ts`
-- **THEN** `pnpm vitest run` executes from the `frontend/` directory
+#### Scenario: Vault-js unit tests
+- **WHEN** a developer runs `task test:vault`
+- **THEN** `npx vitest run` executes from the `vault-js/` directory
 
 #### Scenario: End-to-end tests
 - **WHEN** a developer runs `task test:e2e`
-- **THEN** Playwright browser tests execute from the `frontend/` directory (or a stub message prints)
-
-### Requirement: Integration tests task runs real tests
-The Taskfile SHALL define a `test:int` task that runs `go test -tags=integration ./...` from the `backend/` directory (not a stub).
-
-#### Scenario: Integration tests run with real Postgres
-- **WHEN** a developer runs `task test:int` with Docker available
-- **THEN** `go test -tags=integration ./...` executes from the `backend/` directory and testcontainers starts a real Postgres instance for the tests
-
-#### Scenario: Integration tests exit non-zero on failure
-- **WHEN** one or more integration tests fail
-- **THEN** `task test:int` exits with a non-zero status code
+- **THEN** Playwright browser tests execute (or a stub message prints)
 
 ### Requirement: Generate tasks
-The Taskfile SHALL define `generate`, `generate:proto`, and `generate:sqlc` tasks.
+The Taskfile SHALL define `generate`, `generate:templ`, and `generate:sqlc` tasks. The `generate:proto` task is removed.
 
 #### Scenario: Aggregate generate task runs sub-tasks
 - **WHEN** a developer runs `task generate`
-- **THEN** both `generate:proto` and `generate:sqlc` execute
+- **THEN** both `generate:templ` and `generate:sqlc` execute
 
-#### Scenario: Proto codegen runs buf generate
-- **WHEN** a developer runs `task generate:proto`
-- **THEN** `buf generate` executes from the `proto/` directory and generates code in `backend/gen/` and `frontend/gen/`
-
-#### Scenario: Proto codegen working directory
-- **WHEN** a developer runs `task generate:proto`
-- **THEN** the command executes from the `proto/` directory
+#### Scenario: templ codegen runs templ generate
+- **WHEN** a developer runs `task generate:templ`
+- **THEN** `templ generate` executes from the `backend/` directory and produces `_templ.go` files
 
 #### Scenario: sqlc codegen runs sqlc generate
 - **WHEN** a developer runs `task generate:sqlc`
 - **THEN** `sqlc generate` executes from `backend/internal/storage/` and generates Go code in `backend/internal/storage/db/`
 
-### Requirement: Migrate task
-The Taskfile SHALL define a `migrate` task that runs `atlas migrate apply` from the `backend/` directory to apply pending database migrations.
-
-#### Scenario: Migrate task applies migrations
-- **WHEN** a developer runs `task migrate`
-- **THEN** `atlas migrate apply` executes from the `backend/` directory using the `atlas.hcl` configuration
-
-#### Scenario: Migrate task uses atlas config
-- **WHEN** a developer runs `task migrate`
-- **THEN** Atlas reads connection settings from `backend/atlas.hcl`
-
-### Requirement: Migrate diff task
-The Taskfile SHALL define a `migrate:diff` task that runs `atlas migrate diff` to auto-generate a new versioned SQL migration from the difference between the current migration state and the desired HCL schema.
-
-#### Scenario: Diff generates migration file
-- **WHEN** a developer modifies `backend/schema.hcl` and runs `task migrate:diff -- <name>`
-- **THEN** a new SQL migration file is created in `backend/migrations/` containing the DDL to reach the desired state
-
-#### Scenario: Diff with no changes
-- **WHEN** a developer runs `task migrate:diff` and the HCL schema matches the current migration state
-- **THEN** no new migration file is generated
-
-### Requirement: Dev task
-The Taskfile SHALL define a `dev` task that starts the local development environment by running `docker compose up`.
-
-#### Scenario: Dev task starts compose services
-- **WHEN** a developer runs `task dev`
-- **THEN** `docker compose up` executes and all local dev services start
-
-### Requirement: Stub behavior
-Any task that is not yet wired to real tooling SHALL print a descriptive message indicating it is not yet configured and what it will do when wired.
-
-#### Scenario: Stub task output
-- **WHEN** a developer runs a stub task (e.g., `task lint`)
-- **THEN** the output includes a message like "Not yet configured" and describes the intended behavior
-
-### Requirement: Backend dev task
-The Taskfile SHALL define a `dev:backend` task that runs the Go backend server locally using `go run ./cmd/server/`.
-
-#### Scenario: Dev backend starts the server
-- **WHEN** a developer runs `task dev:backend`
-- **THEN** the Go backend server starts on the configured port
-
-#### Scenario: Dev backend runs from correct directory
-- **WHEN** a developer runs `task dev:backend`
-- **THEN** the command executes from the `backend/` directory
-
 ### Requirement: TypeScript lint task
-The Taskfile SHALL define a `lint:ts` task that runs ESLint and Prettier check from the `frontend/` directory.
+The Taskfile SHALL define a `lint:ts` task that runs ESLint and type checking from the `vault-js/` directory (not the removed `frontend/` directory).
 
-#### Scenario: Lint TS runs ESLint and Prettier
+#### Scenario: Lint TS runs ESLint and type check on vault-js
 - **WHEN** a developer runs `task lint:ts`
-- **THEN** `pnpm eslint .` and `pnpm prettier --check .` execute from the `frontend/` directory
-
-### Requirement: Proto lint task
-The Taskfile SHALL define a `lint:proto` task that runs `buf lint` from the `proto/` directory.
-
-#### Scenario: Proto lint runs buf lint
-- **WHEN** a developer runs `task lint:proto`
-- **THEN** `buf lint` executes from the `proto/` directory
-
-#### Scenario: Proto lint working directory
-- **WHEN** a developer runs `task lint:proto`
-- **THEN** the command executes from the `proto/` directory
-
-#### Scenario: Proto lint exits non-zero on violations
-- **WHEN** a proto file has lint violations and a developer runs `task lint:proto`
-- **THEN** the task exits with a non-zero status code
+- **THEN** ESLint and `tsc --noEmit` execute from the `vault-js/` directory
 
 ### Requirement: TypeScript fix task
-The Taskfile SHALL define a `fix:ts` task that auto-fixes ESLint and Prettier issues from the `frontend/` directory.
+The Taskfile SHALL define a `fix:ts` task that auto-fixes ESLint and Prettier issues from the `vault-js/` directory.
 
 #### Scenario: Fix TS auto-corrects issues
 - **WHEN** a developer runs `task fix:ts`
-- **THEN** `pnpm eslint --fix .` and `pnpm prettier --write .` execute from the `frontend/` directory
+- **THEN** ESLint fix and Prettier write execute from the `vault-js/` directory
 
 ### Requirement: Frontend dev task
-The Taskfile SHALL define a `dev:frontend` task that runs `pnpm dev` from the `frontend/` directory.
+The Taskfile SHALL define a `dev:frontend` task that is removed or repurposed. The SvelteKit dev server is no longer applicable.
 
-#### Scenario: Dev frontend starts the dev server
-- **WHEN** a developer runs `task dev:frontend`
-- **THEN** the SvelteKit dev server starts
-
-#### Scenario: Dev frontend runs from correct directory
-- **WHEN** a developer runs `task dev:frontend`
-- **THEN** the command executes from the `frontend/` directory
+#### Scenario: dev:frontend is removed
+- **WHEN** a developer runs `task --list`
+- **THEN** the `dev:frontend` task does not appear (or prints a message that it has been removed)
 
 ### Requirement: Docker build task
-The Taskfile SHALL define a `docker:build` task that builds both the backend and frontend Docker images locally.
+The Taskfile SHALL define a `docker:build` task that builds the backend Docker image only. The frontend image build is removed.
 
-#### Scenario: Docker build task builds both images
+#### Scenario: Docker build task builds backend image
 - **WHEN** a developer runs `task docker:build`
-- **THEN** both `bartering-backend` and `bartering-frontend` images are built via `docker build`
-
-#### Scenario: Docker build task runs from repo root
-- **WHEN** a developer runs `task docker:build`
-- **THEN** the build commands execute with correct context paths (`./backend` and `./frontend`)
+- **THEN** only the `bartering-backend` image is built via `docker build`
 
 ### Requirement: deps:check task
-The Taskfile SHALL define a `deps:check` task that verifies all required developer tools are installed, printing a pass/fail line for each with an install hint for any that are missing.
-
-#### Scenario: All tools present
-- **WHEN** a developer runs `task deps:check` and all required tools are installed
-- **THEN** each tool is listed with a checkmark and its version, and the task exits zero
-
-#### Scenario: A tool is missing
-- **WHEN** a developer runs `task deps:check` and one or more tools are not installed
-- **THEN** missing tools are listed with an install hint and the task exits non-zero
+The Taskfile SHALL define a `deps:check` task that verifies all required developer tools are installed. The checked tools SHALL be updated: remove `pnpm`, `buf`, and `node`; add `templ` and `npm` (for vault-js).
 
 #### Scenario: Required tools covered
 - **WHEN** a developer runs `task deps:check`
-- **THEN** it checks for: `go`, `node`, `pnpm`, `task`, `docker`, `colima`, `buf`, `atlas`, `sqlc`, `golangci-lint`, and `lefthook`
+- **THEN** it checks for: `go`, `pnpm`, `task`, `docker`, `colima`, `atlas`, `sqlc`, `golangci-lint`, `lefthook`, and `templ`
 
-### Requirement: hooks:install task
-The Taskfile SHALL define a `hooks:install` task that installs the lefthook pre-commit hooks into the local git repository.
+## ADDED Requirements
 
-#### Scenario: Install task runs lefthook install
-- **WHEN** a developer runs `task hooks:install`
-- **THEN** `lefthook install` executes and the pre-commit hook is written to `.git/hooks/pre-commit`
+### Requirement: Build vault task
+The Taskfile SHALL define a `build:vault` task that compiles the vault-js TypeScript module to `backend/static/vault.js` using esbuild.
 
-#### Scenario: Install task is idempotent
-- **WHEN** a developer runs `task hooks:install` more than once
-- **THEN** each run succeeds without error and hooks remain correctly installed
+#### Scenario: Build vault compiles TypeScript
+- **WHEN** a developer runs `task build:vault`
+- **THEN** esbuild compiles the vault-js source and outputs `backend/static/vault.js`
+
+#### Scenario: Build vault runs from correct directory
+- **WHEN** a developer runs `task build:vault`
+- **THEN** the command executes from the `vault-js/` directory
+
+## REMOVED Requirements
+
+### Requirement: Proto lint task
+**Reason**: Protobuf toolchain is removed. No `.proto` files exist to lint.
+**Migration**: Remove `lint:proto` task and its `buf lint` invocation.
+
+### Requirement: Frontend dev task
+**Reason**: SvelteKit frontend is removed.
+**Migration**: Remove `dev:frontend` task. The Go backend serves HTML directly; use `task dev:backend` for development.

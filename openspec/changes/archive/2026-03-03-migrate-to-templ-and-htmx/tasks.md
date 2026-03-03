@@ -40,7 +40,7 @@
 
 - [x] 5.1 Update `backend/Dockerfile` — ensure embedded static assets are included in the build context; remove any references to frontend image
 - [x] 5.2 Delete `frontend/Dockerfile` (already deleted in step 1.1)
-- [ ] 5.3 Verify `docker build -t bartering-backend ./backend` succeeds and the image serves pages and static assets
+- [x] 5.3 Verify `docker build -t bartering-backend ./backend` succeeds and the image serves pages and static assets
 
 ## 6. Update Taskfile
 
@@ -61,12 +61,12 @@
 - [x] 7.2 Update lint PR comment — remove proto lint and buf breaking sections; keep TS lint and codegen verification
 - [x] 7.3 Replace `test-ts` job with `test-vault` job — install pnpm deps in `vault-js/`, run `task test:vault`, cache pnpm store keyed on `vault-js/pnpm-lock.yaml`
 - [x] 7.4 Update pnpm store cache to key on `vault-js/pnpm-lock.yaml` instead of `frontend/pnpm-lock.yaml`
-- [ ] 7.5 Verify CI workflow YAML is valid (`act` or push to branch and check)
+- [x] 7.5 Verify CI workflow YAML is valid (`act` or push to branch and check)
 
 ## 8. Update docker-compose and local dev
 
 - [x] 8.1 Remove any frontend service references from `docker-compose.yaml` (if present)
-- [ ] 8.2 Verify `task dev` starts the local environment and `task dev:backend` serves pages at localhost
+- [x] 8.2 Verify `task dev` starts the local environment and `task dev:backend` serves pages at localhost
 
 ## 9. Update documentation and rules
 

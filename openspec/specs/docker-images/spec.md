@@ -1,7 +1,7 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Backend Dockerfile exists
-The repository SHALL contain a `backend/Dockerfile` that produces a production-ready container image for the Go server.
+The repository SHALL contain a `backend/Dockerfile` that produces a production-ready container image for the Go server. The image SHALL include embedded static assets (CSS, JavaScript, vendor scripts) compiled into the Go binary.
 
 #### Scenario: Backend image builds successfully
 - **WHEN** a developer runs `docker build -t bartering-backend ./backend`
@@ -23,25 +23,12 @@ The repository SHALL contain a `backend/Dockerfile` that produces a production-r
 - **WHEN** the backend image is inspected
 - **THEN** it SHALL have a `HEALTHCHECK` instruction targeting the `/healthz` endpoint
 
+#### Scenario: Static assets are served from the image
+- **WHEN** a container is started and a client requests `/static/styles.css`
+- **THEN** the Go binary serves the embedded static asset without requiring files on the filesystem
+
+## REMOVED Requirements
+
 ### Requirement: Frontend Dockerfile exists
-The repository SHALL contain a `frontend/Dockerfile` that produces a production-ready container image serving the SvelteKit static build via nginx.
-
-#### Scenario: Frontend image builds successfully
-- **WHEN** a developer runs `docker build -t bartering-frontend ./frontend`
-- **THEN** the build completes without errors
-
-#### Scenario: Frontend image uses multi-stage build
-- **WHEN** the frontend image is built
-- **THEN** the final image SHALL NOT contain pnpm, build tooling, Node.js, or raw source files
-
-#### Scenario: Frontend dependencies installed with frozen lockfile
-- **WHEN** the frontend build stage runs
-- **THEN** pnpm SHALL be invoked with `--frozen-lockfile` to ensure reproducible installs
-
-#### Scenario: Frontend traffic served by non-root process
-- **WHEN** a container is started from the frontend image
-- **THEN** nginx worker processes (which serve HTTP traffic) SHALL run as the `nginx` user (non-root)
-
-#### Scenario: Frontend image declares a health check
-- **WHEN** the frontend image is inspected
-- **THEN** it SHALL have a `HEALTHCHECK` instruction
+**Reason**: The SvelteKit frontend is removed. The Go binary serves HTML and static assets directly. There is no separate frontend image.
+**Migration**: All frontend concerns (HTML rendering, CSS, JavaScript) are handled by the Go server with templ components and embedded static assets.

@@ -1,11 +1,4 @@
-## ADDED Requirements
-
-### Requirement: Go module initialization
-The backend SHALL have a Go module at `backend/go.mod` with module path `github.com/jack-fin/bartering-games/backend` and Go version 1.26.
-
-#### Scenario: Module is valid
-- **WHEN** a developer runs `go mod verify` from the `backend/` directory
-- **THEN** the command succeeds without errors
+## MODIFIED Requirements
 
 ### Requirement: Chi router with standard middleware
 The server SHALL use `go-chi/chi/v5` as the HTTP router with the following middleware applied in order: RealIP, Logger, Recoverer, Compress, CORS.
@@ -15,84 +8,72 @@ The server SHALL use `go-chi/chi/v5` as the HTTP router with the following middl
 - **THEN** it passes through RealIP, Logger, Recoverer, Compress, and CORS middleware before reaching the handler
 
 ### Requirement: Health endpoint
-The server SHALL serve health checks via the Connect-based `HealthService` handler at the path returned by `NewHealthServiceHandler()`. The plain-text `GET /healthz` endpoint SHALL be removed.
+The server SHALL serve a plain-text health check at `GET /healthz` that returns HTTP 200 with body `ok`. The Connect-based `HealthService` handler SHALL be removed.
 
-#### Scenario: Health check via Connect RPC
-- **WHEN** a client sends a Connect request to `/bartering.v1.HealthService/Check`
-- **THEN** the server responds with a `CheckResponse` containing the current serving status
-
-#### Scenario: Plain-text healthz is removed
+#### Scenario: Health check via GET
 - **WHEN** a client sends `GET /healthz`
-- **THEN** the server responds with 404
-
-### Requirement: Readiness endpoint
-The server SHALL expose a `GET /readyz` endpoint that returns HTTP 200 with a plain text body of `ok`.
-
-#### Scenario: Readiness check succeeds
-- **WHEN** a client sends `GET /readyz`
 - **THEN** the server responds with status 200 and body `ok`
 
-#### Scenario: Readiness is extensible
-- **WHEN** future stories add database or worker health checks
-- **THEN** the readiness handler can be updated to check those dependencies without changing the endpoint path or response format
-
-### Requirement: Structured logging
-The server SHALL use `log/slog` for structured logging. In production (LOG_LEVEL is not `debug`), logs SHALL be output as JSON. In development (LOG_LEVEL is `debug`), logs SHALL use text format.
-
-#### Scenario: Production log format
-- **WHEN** the server starts with `LOG_LEVEL=info`
-- **THEN** log output is JSON-formatted
-
-#### Scenario: Development log format
-- **WHEN** the server starts with `LOG_LEVEL=debug`
-- **THEN** log output is text-formatted
-
-### Requirement: Environment-based configuration
-The server SHALL read configuration from environment variables with these defaults:
-- `PORT`: default `8080`
-- `LOG_LEVEL`: default `info`
-
-#### Scenario: Default port
-- **WHEN** the server starts without `PORT` set
-- **THEN** it listens on port 8080
-
-#### Scenario: Custom port
-- **WHEN** the server starts with `PORT=3000`
-- **THEN** it listens on port 3000
-
-#### Scenario: Default log level
-- **WHEN** the server starts without `LOG_LEVEL` set
-- **THEN** the log level is info
-
-### Requirement: Graceful shutdown
-The server SHALL shut down gracefully on SIGTERM or SIGINT, draining in-flight requests with a timeout.
-
-#### Scenario: Clean shutdown on SIGTERM
-- **WHEN** the server receives SIGTERM while handling requests
-- **THEN** it stops accepting new connections, waits for in-flight requests to complete (up to the timeout), and exits cleanly
-
-#### Scenario: Clean shutdown on SIGINT
-- **WHEN** the server receives SIGINT (Ctrl+C)
-- **THEN** it performs the same graceful shutdown as SIGTERM
-
-### Requirement: CORS middleware
-The server SHALL include CORS middleware configured to allow all origins by default (for local development), with support for tightening allowed origins via configuration in future.
-
-#### Scenario: CORS headers present
-- **WHEN** a client sends a preflight OPTIONS request
-- **THEN** the server responds with appropriate CORS headers (Access-Control-Allow-Origin, Access-Control-Allow-Methods, Access-Control-Allow-Headers)
+#### Scenario: Connect health endpoint is removed
+- **WHEN** a client sends a Connect request to `/bartering.v1.HealthService/Check`
+- **THEN** the server responds with 404
 
 ### Requirement: Connect handler integration with middleware
 Connect service handlers mounted via `r.Mount()` SHALL pass through the same Chi middleware stack (RealIP, Logger, Recoverer, Compress, CORS) as all other routes.
 
-#### Scenario: Middleware applies to Connect requests
-- **WHEN** a Connect RPC request is received
-- **THEN** it passes through the full middleware stack before reaching the Connect handler
+This requirement is superseded — Connect handlers are removed. All routes (templ pages, static assets, API endpoints) pass through the Chi middleware stack.
+
+#### Scenario: Middleware applies to all routes
+- **WHEN** any HTTP request is received (page, static asset, or API)
+- **THEN** it passes through the full middleware stack before reaching the handler
 
 ### Requirement: Server main uses rpc import alias
 The server entry point (`backend/cmd/server/main.go`) SHALL import the generated Connect package with the `rpc` alias, consistent with the project-wide convention.
 
-#### Scenario: Handler mounting uses rpc alias
-- **WHEN** `cmd/server/main.go` mounts Connect service handlers
-- **THEN** the handler constructor call uses the `rpc.` prefix (e.g., `rpc.NewHealthServiceHandler(...)`)
-- **AND** the server starts and serves health checks identically to before the alias change
+This requirement is removed — there is no generated Connect package to import. The server entry point imports templ components directly.
+
+#### Scenario: Server imports templ components
+- **WHEN** `cmd/server/main.go` registers page routes
+- **THEN** it imports and renders templ components from `backend/internal/components/`
+
+## ADDED Requirements
+
+### Requirement: templ page routes
+The server SHALL register Chi routes that render templ page components for `GET /` (home) and `GET /login` (login).
+
+#### Scenario: Home page route
+- **WHEN** a client sends `GET /`
+- **THEN** the server responds with HTML rendered by the home page templ component inside the base layout
+
+#### Scenario: Login page route
+- **WHEN** a client sends `GET /login`
+- **THEN** the server responds with HTML rendered by the login page templ component inside the base layout
+
+#### Scenario: Content-Type header
+- **WHEN** a templ page route responds
+- **THEN** the `Content-Type` header is `text/html; charset=utf-8`
+
+### Requirement: Static asset route
+The server SHALL mount an `http.FileServer` at `/static/*` to serve CSS, JavaScript (HTMX, vault.js), and other static assets.
+
+#### Scenario: Static files are served
+- **WHEN** a client requests `/static/styles.css`
+- **THEN** the server returns the CSS file with appropriate `Content-Type`
+
+#### Scenario: Vendor scripts are served
+- **WHEN** a client requests `/static/vendor/htmx.min.js`
+- **THEN** the server returns the HTMX JavaScript file
+
+#### Scenario: 404 for missing static files
+- **WHEN** a client requests `/static/nonexistent.js`
+- **THEN** the server responds with 404
+
+## REMOVED Requirements
+
+### Requirement: Server main uses rpc import alias
+**Reason**: Connect RPC is removed. No generated Connect package exists to import.
+**Migration**: Server imports templ components from `backend/internal/components/` instead.
+
+### Requirement: Connect handler integration with middleware
+**Reason**: Connect RPC handlers are removed. All routes are plain Chi handlers.
+**Migration**: Middleware applies to all routes uniformly via the Chi middleware stack.
