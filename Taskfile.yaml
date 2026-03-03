@@ -49,7 +49,7 @@ tasks:
 
   test:e2e:
     desc: Run Playwright browser tests
-    cmd: echo "[test:e2e] Not yet configured — will run playwright test"
+    cmd: pnpm exec playwright test
 
   # ── Code Generation ────────────────────────────────────────
   generate:
