@@ -1,7 +1,5 @@
-## ADDED Requirements
-
 ### Requirement: Atlas configuration file
-The project SHALL have an `atlas.hcl` configuration file in `backend/` that defines the Atlas project settings, including the database connection URL and migration directory path.
+The project SHALL have an `atlas.hcl` configuration file at the repository root that defines the Atlas project settings, including the database connection URL and migration directory path.
 
 #### Scenario: Config uses environment variable with default
 - **WHEN** `DATABASE_URL` environment variable is not set
@@ -13,13 +11,13 @@ The project SHALL have an `atlas.hcl` configuration file in `backend/` that defi
 
 #### Scenario: Config references migration directory
 - **WHEN** Atlas reads the configuration
-- **THEN** the migration directory is set to `file://migrations` (relative to `backend/`)
+- **THEN** the migration directory is set to `file://migrations` (relative to repo root)
 
 ### Requirement: Declarative HCL schema file
-The project SHALL have a `schema.hcl` file in `backend/` that defines the desired database schema state in Atlas HCL format. This file is the source of truth for what the database schema should look like.
+The project SHALL have a `schema.hcl` file at the repository root that defines the desired database schema state in Atlas HCL format.
 
 #### Scenario: Schema file defines tables
-- **WHEN** a developer reads `backend/schema.hcl`
+- **WHEN** a developer reads `schema.hcl` at the repo root
 - **THEN** it contains the complete desired database schema in Atlas HCL syntax
 
 #### Scenario: Schema file is diffable
@@ -42,14 +40,14 @@ The initial migration SHALL create a `users` table with an `id` column (UUID pri
 - **THEN** `created_at` is automatically set to the current timestamp
 
 ### Requirement: Versioned migration files
-Atlas SHALL generate versioned SQL migration files in `backend/migrations/`. Each migration file SHALL contain the SQL DDL statements and the directory SHALL include an `atlas.sum` checksum file.
+Atlas SHALL generate versioned SQL migration files in `migrations/` at the repository root. Each migration file SHALL contain the SQL DDL statements and the directory SHALL include an `atlas.sum` checksum file.
 
 #### Scenario: Migration files are plain SQL
-- **WHEN** a developer inspects a file in `backend/migrations/`
+- **WHEN** a developer inspects a file in `migrations/`
 - **THEN** it contains standard SQL DDL statements (CREATE TABLE, ALTER TABLE, etc.)
 
 #### Scenario: Checksum file exists
-- **WHEN** a developer lists `backend/migrations/`
+- **WHEN** a developer lists `migrations/`
 - **THEN** an `atlas.sum` file is present that validates the integrity of migration files
 
 ### Requirement: Migration apply is idempotent

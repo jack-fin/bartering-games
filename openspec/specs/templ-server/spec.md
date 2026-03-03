@@ -1,10 +1,8 @@
-## ADDED Requirements
-
 ### Requirement: templ dependency and code generation
-The backend SHALL use `github.com/a-h/templ` as a dependency. Running `templ generate` from the `backend/` directory SHALL produce `_templ.go` files from `.templ` source files. Generated `_templ.go` files SHALL be committed to Git.
+The project SHALL use `github.com/a-h/templ` as a dependency. Running `templ generate` from the repository root SHALL produce `_templ.go` files from `.templ` source files. Generated `_templ.go` files SHALL be committed to Git.
 
 #### Scenario: templ generate produces Go files
-- **WHEN** a developer runs `templ generate` from the `backend/` directory
+- **WHEN** a developer runs `templ generate` from the repository root
 - **THEN** each `.templ` file produces a corresponding `_templ.go` file in the same directory
 
 #### Scenario: Generated code is committed
@@ -16,7 +14,7 @@ The backend SHALL use `github.com/a-h/templ` as a dependency. Running `templ gen
 - **THEN** `git diff` shows no changes
 
 ### Requirement: Base HTML layout component
-The backend SHALL contain a layout component at `backend/internal/components/layout.templ` that renders a complete HTML document with `<html>`, `<head>`, and `<body>` elements. The layout SHALL accept a page title and render child content via `{ children... }`.
+The project SHALL contain a layout component at `internal/components/layout.templ` that renders a complete HTML document with `<html>`, `<head>`, and `<body>` elements. The layout SHALL accept a page title and render child content via `{ children... }`.
 
 #### Scenario: Layout renders full HTML document
 - **WHEN** a page component uses the layout
@@ -24,8 +22,8 @@ The backend SHALL contain a layout component at `backend/internal/components/lay
 
 #### Scenario: Layout includes HTMX
 - **WHEN** the layout renders
-- **THEN** the `<head>` includes a `<script>` tag loading HTMX from `/static/vendor/htmx.min.js`
-- **AND** the `<head>` includes a `<script>` tag loading the head-support extension from `/static/vendor/htmx-ext-head-support.js`
+- **THEN** the `<head>` includes a `<script>` tag loading HTMX from `/static/lib/htmx.min.js`
+- **AND** the `<head>` includes a `<script>` tag loading the head-support extension from `/static/lib/htmx-ext-head-support.js`
 
 #### Scenario: Layout enables hx-boost
 - **WHEN** the layout renders
@@ -44,14 +42,14 @@ The layout SHALL use semantic HTML elements: `<header>` for navigation, `<main>`
 - **AND** the page content appears inside `<main>`
 
 ### Requirement: Navigation component
-The backend SHALL contain a navigation component at `backend/internal/components/nav.templ` that renders site navigation inside a `<nav>` element within the layout's `<header>`.
+The project SHALL contain a navigation component at `internal/components/nav.templ` that renders site navigation inside a `<nav>` element within the layout's `<header>`.
 
 #### Scenario: Navigation renders
 - **WHEN** the layout renders
 - **THEN** a `<nav>` element with site navigation links is present inside `<header>`
 
 ### Requirement: Footer component
-The backend SHALL contain a footer component at `backend/internal/components/footer.templ` that renders site footer content.
+The project SHALL contain a footer component at `internal/components/footer.templ` that renders site footer content.
 
 #### Scenario: Footer renders
 - **WHEN** the layout renders
@@ -84,10 +82,10 @@ The backend SHALL contain templ page components for the home page and login page
 - **THEN** the login page component renders inside the layout with placeholder content
 
 ### Requirement: Component directory structure
-templ components SHALL be organized under `backend/internal/components/` with page-level components in a `pages/` subdirectory.
+templ components SHALL be organized under `internal/components/` with page-level components in a `pages/` subdirectory.
 
 #### Scenario: Directory structure
-- **WHEN** a developer inspects `backend/internal/components/`
+- **WHEN** a developer inspects `internal/components/`
 - **THEN** layout, nav, and footer components exist at the top level
 - **AND** page components exist in the `pages/` subdirectory
 
@@ -98,8 +96,8 @@ The Go server SHALL serve static files from `/static/*` using `http.FileServer`.
 - **WHEN** a request is made to `/static/styles.css`
 - **THEN** the server returns the CSS file with appropriate content type
 
-#### Scenario: Vendor scripts served
-- **WHEN** a request is made to `/static/vendor/htmx.min.js`
+#### Scenario: Lib scripts served
+- **WHEN** a request is made to `/static/lib/htmx.min.js`
 - **THEN** the server returns the HTMX library JavaScript file
 
 #### Scenario: Static assets embedded in production binary

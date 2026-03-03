@@ -1,19 +1,18 @@
 ## MODIFIED Requirements
 
 ### Requirement: Lint job runs all linters
-The CI workflow SHALL include a `lint` job that runs Go and vault-js TypeScript linters. Go linting SHALL use `golangci/golangci-lint-action` (with PR annotations enabled); vault-js TypeScript linting SHALL invoke `task lint:ts`. Proto linting is removed.
+The CI workflow SHALL include a `lint` job that runs Go and vault-js TypeScript linters. Go linting SHALL use `golangci/golangci-lint-action` with `working-directory` set to the repository root (or omitted, since it defaults to root).
 
-#### Scenario: Lint job passes on clean code
-- **WHEN** all source files pass their respective linters
-- **THEN** the lint job exits zero
+#### Scenario: Go lint working directory is repo root
+- **WHEN** the lint job runs `golangci-lint`
+- **THEN** `working-directory` SHALL be `.` or omitted (not `backend`)
 
-#### Scenario: Lint job fails on violation
-- **WHEN** any linter reports a violation
-- **THEN** the lint job exits non-zero and the violation is reported in CI output
+### Requirement: Go module setup
+The CI workflow SHALL use `actions/setup-go` with `go-version-file` pointing to the root-level `go.mod`.
 
-#### Scenario: Go lint violation annotates the PR diff
-- **WHEN** a Go lint violation exists on lines changed in a pull request
-- **THEN** the violation appears as an inline annotation on the PR diff
+#### Scenario: go-version-file points to root go.mod
+- **WHEN** the CI workflow sets up Go
+- **THEN** `go-version-file` SHALL be `go.mod` (not `backend/go.mod`)
 
 ### Requirement: Unified PR lint comment with upsert behavior
 The `lint` job SHALL post a single PR comment summarising the outcome of all non-golangci-lint checks (TypeScript lint, codegen verification). Buf breaking and proto lint are removed from the comment. On each re-run the comment SHALL be updated in place rather than a new comment being created.
@@ -39,30 +38,22 @@ The `lint` job SHALL post a single PR comment summarising the outcome of all non
 - **THEN** no PR comment is posted
 
 ### Requirement: Lint job verifies codegen is committed
-The `lint` job SHALL verify that generated templ and sqlc code is up to date by running `task generate` and then `git diff --exit-code`. Protobuf codegen verification is removed.
+The `lint` job SHALL verify that generated templ and sqlc code is up to date by running `task generate` and then `git diff --exit-code`.
 
-#### Scenario: Generated code is up to date
-- **WHEN** all `.templ` and SQL query files match the checked-in generated output
-- **THEN** `git diff --exit-code` exits zero and the verify-codegen check passes
-
-#### Scenario: Generated code is stale
-- **WHEN** a `.templ` or SQL query file was modified without regenerating
-- **THEN** `git diff --exit-code` exits non-zero and the lint job fails with a message indicating which files differ
+#### Scenario: Codegen verification runs from repo root
+- **WHEN** the lint job runs `task generate`
+- **THEN** `working-directory` SHALL be `.` or omitted (not `backend`)
 
 ### Requirement: test-go job runs unit and integration tests
-The CI workflow SHALL include a `test-go` job that runs Go unit tests via `task test:go` and integration tests via `task test:int`. No changes to this requirement.
+The CI workflow SHALL include a `test-go` job that runs Go unit tests and integration tests from the repository root.
 
-#### Scenario: Unit tests pass
-- **WHEN** all Go unit tests pass
-- **THEN** the `task test:go` step exits zero
+#### Scenario: Unit tests run from repo root
+- **WHEN** the `test-go` job runs `task test:go`
+- **THEN** `working-directory` SHALL be `.` or omitted (not `backend`)
 
-#### Scenario: Integration tests pass
-- **WHEN** all Go integration tests pass with a real Postgres instance via testcontainers
-- **THEN** the `task test:int` step exits zero
-
-#### Scenario: test-go job fails on test failure
-- **WHEN** any Go unit or integration test fails
-- **THEN** the test-go job exits non-zero
+#### Scenario: Integration tests run from repo root
+- **WHEN** the `test-go` job runs `task test:int`
+- **THEN** `working-directory` SHALL be `.` or omitted (not `backend`)
 
 ### Requirement: Go module cache
 The CI workflow SHALL cache Go module downloads using `actions/cache` keyed on `go.sum` to avoid redundant downloads across runs. No changes to this requirement.
