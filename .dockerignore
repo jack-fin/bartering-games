@@ -1,0 +1,7 @@
+bin/
+vault-js/
+openspec/
+.claude/
+.github/
+.git/
+*.md

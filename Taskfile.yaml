@@ -8,7 +8,6 @@ tasks:
 
   lint:go:
     desc: Run Go linter (golangci-lint)
-    dir: backend
     cmd: golangci-lint run ./...
 
   lint:ts:
@@ -37,7 +36,6 @@ tasks:
 
   test:go:
     desc: Run Go unit tests
-    dir: backend
     cmd: go test ./...
 
   test:vault:
@@ -47,7 +45,6 @@ tasks:
 
   test:int:
     desc: Run integration tests (testcontainers, requires Docker)
-    dir: backend
     cmd: go test -tags=integration ./...
 
   test:e2e:
@@ -61,38 +58,34 @@ tasks:
 
   generate:templ:
     desc: Generate Go code from templ components
-    dir: backend
     cmd: go run github.com/a-h/templ/cmd/templ@v0.3.1001 generate
 
   generate:sqlc:
     desc: Generate sqlc code
-    dir: backend/internal/storage
+    dir: internal/storage
     cmd: sqlc generate
 
   # ── Build ────────────────────────────────────────────────
   build:
     desc: Build Go backend binary
-    dir: backend
     cmd: go build -o bin/server ./cmd/server/
 
   build:vault:
-    desc: Compile vault-js TypeScript to backend/cmd/server/static/vault.js
+    desc: Compile vault-js TypeScript to cmd/server/static/vault.js
     dir: vault-js
     cmd: pnpm run build
 
   docker:build:
     desc: Build backend Docker image
-    cmd: docker build -t bartering-backend ./backend
+    cmd: docker build -t bartering-backend .
 
   # ── Database ───────────────────────────────────────────────
   "migrate":
     desc: Apply pending Atlas migrations
-    dir: backend
     cmd: atlas migrate apply --env local
 
   "migrate:diff":
     desc: "Generate a new migration from schema.hcl diff (usage: task migrate:diff -- <name>)"
-    dir: backend
     cmd: "atlas migrate diff {{.CLI_ARGS}} --env local"
 
   # ── Setup ──────────────────────────────────────────────────
@@ -139,5 +132,4 @@ tasks:
 
   dev:backend:
     desc: Run Go backend server locally
-    dir: backend
     cmd: go run ./cmd/server/

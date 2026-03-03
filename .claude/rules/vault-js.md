@@ -6,7 +6,7 @@ paths:
 # Vault JS Standards
 
 The vault-js module is a standalone TypeScript package compiled by esbuild into a single
-IIFE bundle (`backend/cmd/server/static/vault.js`). It has zero runtime dependencies.
+IIFE bundle (`cmd/server/static/vault.js`). It has zero runtime dependencies.
 
 ## Security
 

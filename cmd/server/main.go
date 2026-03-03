@@ -16,7 +16,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
-	"github.com/jack-fin/bartering-games/backend/internal/components/pages"
+	"github.com/jack-fin/bartering-games/internal/components/pages"
 )
 
 //go:embed static
@@ -44,7 +44,11 @@ func main() {
 	}))
 
 	// Static assets (CSS, JS, vendor scripts)
-	staticContent, _ := fs.Sub(staticFS, "static")
+	staticContent, err := fs.Sub(staticFS, "static")
+	if err != nil {
+		slog.Error("failed to load embedded static assets", "error", err)
+		os.Exit(1)
+	}
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServerFS(staticContent)))
 
 	// Page routes
