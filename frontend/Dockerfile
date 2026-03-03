@@ -13,20 +13,13 @@ COPY . .
 RUN pnpm run build
 
 # ── Runtime stage ─────────────────────────────────────────────────────────────
-# adapter-node bundles all deps via Vite; only build/ and package.json are needed.
-# package.json is required for Node to resolve "type": "module".
-FROM node:22-alpine
+# Static files only — no Node.js runtime needed.
+FROM nginx:alpine
 
-WORKDIR /app
-
-COPY --from=build /app/build ./build
-COPY --from=build /app/package.json ./
-
-USER node
+COPY --from=build /app/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD wget -qO- http://localhost:3000/ || exit 1
-
-CMD ["node", "build/index.js"]
