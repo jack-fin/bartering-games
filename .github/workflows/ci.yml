@@ -16,9 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          fetch-depth: 0  # full history required for buf breaking and golangci-lint diff
+          fetch-depth: 0  # full history required for golangci-lint diff
 
-      # Go is needed for golangci-lint to resolve module deps
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
           go-version-file: backend/go.mod
@@ -30,13 +29,7 @@ jobs:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install buf
-        uses: bufbuild/buf-setup-action@a47c93e0b1648d5651a065437926377d060baa99 # v1.50.0
-
       - name: Install sqlc
-        # SHA256 sourced by downloading the tarball and running:
-        #   curl -sL https://github.com/sqlc-dev/sqlc/releases/download/v1.30.0/sqlc_1.30.0_linux_amd64.tar.gz | shasum -a 256
-        # Update both the URL and hash when bumping the version.
         run: |
           curl -sSL -o /tmp/sqlc.tar.gz \
             https://github.com/sqlc-dev/sqlc/releases/download/v1.30.0/sqlc_1.30.0_linux_amd64.tar.gz
@@ -44,10 +37,6 @@ jobs:
           tar -xz -C /usr/local/bin -f /tmp/sqlc.tar.gz sqlc
 
       # Go linting via official action — provides analysis cache + PR annotations.
-      # install-mode: binary downloads a pre-built binary (seconds, not minutes).
-      # golangci-lint v2 delegates package loading to the system `go` binary, so the
-      # pre-built binary version does not need to match the project's Go version.
-      # version must be pinned so the action's binary cache key is stable across runs.
       - name: Lint Go
         id: lint-go
         continue-on-error: true
@@ -57,7 +46,7 @@ jobs:
           version: v2.10.1
           install-mode: binary
 
-      # TypeScript + Svelte linting (ESLint + Prettier)
+      # vault-js TypeScript linting (ESLint + Prettier)
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
         with:
           version: latest
@@ -66,11 +55,11 @@ jobs:
         with:
           node-version: lts/*
           cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          cache-dependency-path: vault-js/pnpm-lock.yaml
 
-      - name: Install frontend deps
+      - name: Install vault-js deps
         run: pnpm install --frozen-lockfile
-        working-directory: frontend
+        working-directory: vault-js
 
       - name: Lint TypeScript
         id: lint-ts
@@ -78,42 +67,6 @@ jobs:
         run: |
           set +e
           output=$(task lint:ts 2>&1)
-          code=$?
-          set -e
-          echo "$output"
-          echo "output<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$output" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-          if [ $code -eq 0 ]; then
-            echo "outcome=success" >> "$GITHUB_OUTPUT"
-          else
-            echo "outcome=failure" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Lint Proto
-        id: lint-proto
-        continue-on-error: true
-        run: |
-          set +e
-          output=$(task lint:proto 2>&1)
-          code=$?
-          set -e
-          echo "$output"
-          echo "output<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$output" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-          if [ $code -eq 0 ]; then
-            echo "outcome=success" >> "$GITHUB_OUTPUT"
-          else
-            echo "outcome=failure" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Check proto breaking changes
-        id: buf-breaking
-        continue-on-error: true
-        run: |
-          set +e
-          output=$(cd proto && buf breaking --against '../.git#branch=origin/main,subdir=proto' 2>&1)
           code=$?
           set -e
           echo "$output"
@@ -161,47 +114,30 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
+          LINT_GO_OUTCOME: ${{ steps.lint-go.outcome }}
           LINT_TS_OUTCOME: ${{ steps.lint-ts.outputs.outcome }}
           LINT_TS_OUTPUT: ${{ steps.lint-ts.outputs.output }}
-          LINT_PROTO_OUTCOME: ${{ steps.lint-proto.outputs.outcome }}
-          LINT_PROTO_OUTPUT: ${{ steps.lint-proto.outputs.output }}
-          BUF_BREAKING_OUTCOME: ${{ steps.buf-breaking.outputs.outcome }}
-          BUF_BREAKING_OUTPUT: ${{ steps.buf-breaking.outputs.output }}
           VERIFY_CODEGEN_OUTCOME: ${{ steps.verify-codegen.outputs.outcome }}
           VERIFY_CODEGEN_OUTPUT: ${{ steps.verify-codegen.outputs.output }}
         with:
           script: |
-            const hasLabel = context.payload.pull_request.labels.some(l => l.name === 'api:breaking-change');
-
             const steps = [
-              { name: 'TypeScript lint',          outcome: process.env.LINT_TS_OUTCOME,       output: process.env.LINT_TS_OUTPUT },
-              { name: 'Proto lint',               outcome: process.env.LINT_PROTO_OUTCOME,    output: process.env.LINT_PROTO_OUTPUT },
-              { name: 'Proto breaking check',     outcome: process.env.BUF_BREAKING_OUTCOME,  output: process.env.BUF_BREAKING_OUTPUT },
-              { name: 'Verify codegen is committed', outcome: process.env.VERIFY_CODEGEN_OUTCOME, output: process.env.VERIFY_CODEGEN_OUTPUT },
+              { name: 'Go lint',                        outcome: process.env.LINT_GO_OUTCOME,            output: 'See inline annotations on the Files changed tab.' },
+              { name: 'TypeScript lint',                outcome: process.env.LINT_TS_OUTCOME,           output: process.env.LINT_TS_OUTPUT },
+              { name: 'Verify codegen is committed',    outcome: process.env.VERIFY_CODEGEN_OUTCOME,    output: process.env.VERIFY_CODEGEN_OUTPUT },
             ];
 
-            const breakingBypassed = steps.find(s => s.name === 'Proto breaking check').outcome === 'failure' && hasLabel;
-
             const rows = steps.map(({ name, outcome, output }) => {
-              const bypassed = name === 'Proto breaking check' && breakingBypassed;
-              const ico = bypassed ? '⚠️' : outcome === 'success' ? '✅' : '❌';
-
-              const notes = [];
-              if (bypassed) notes.push('> **Bypassed** via `api:breaking-change` label — intentional breaking change acknowledged.');
-              if (name === 'Proto breaking check' && outcome === 'failure' && !bypassed) {
-                notes.push('> **To bypass:** Apply the `api:breaking-change` label to this PR if this breaking change is intentional.');
-              }
+              const ico = outcome === 'success' ? '✅' : '❌';
 
               const detail = outcome === 'failure' && output
                 ? `\n<details><summary>Output</summary>\n\n\`\`\`\n${output}\n\`\`\`\n</details>`
                 : '';
 
-              return [`### ${ico} ${name}`, ...notes, detail].filter(Boolean).join('\n');
+              return [`### ${ico} ${name}`, detail].filter(Boolean).join('\n');
             });
 
-            const allPassed = steps.every(({ name, outcome }) =>
-              outcome === 'success' || (name === 'Proto breaking check' && breakingBypassed)
-            );
+            const allPassed = steps.every(({ outcome }) => outcome === 'success');
 
             const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
             const body = [
@@ -237,24 +173,16 @@ jobs:
               });
             }
 
-      # Hard-fail if any check failed (without a valid bypass).
-      # Prints each failure to the log so errors are visible without opening the PR comment.
+      # Hard-fail if any check failed.
       - name: Fail on lint errors
         if: |
           steps.lint-go.outcome == 'failure' ||
           steps.lint-ts.outputs.outcome == 'failure' ||
-          steps.lint-proto.outputs.outcome == 'failure' ||
-          steps.verify-codegen.outputs.outcome == 'failure' ||
-          (steps.buf-breaking.outputs.outcome == 'failure' &&
-           !contains(github.event.pull_request.labels.*.name, 'api:breaking-change'))
+          steps.verify-codegen.outputs.outcome == 'failure'
         env:
           LINT_GO_OUTCOME: ${{ steps.lint-go.outcome }}
           LINT_TS_OUTCOME: ${{ steps.lint-ts.outputs.outcome }}
           LINT_TS_OUTPUT: ${{ steps.lint-ts.outputs.output }}
-          LINT_PROTO_OUTCOME: ${{ steps.lint-proto.outputs.outcome }}
-          LINT_PROTO_OUTPUT: ${{ steps.lint-proto.outputs.output }}
-          BUF_BREAKING_OUTCOME: ${{ steps.buf-breaking.outputs.outcome }}
-          BUF_BREAKING_OUTPUT: ${{ steps.buf-breaking.outputs.output }}
           VERIFY_CODEGEN_OUTCOME: ${{ steps.verify-codegen.outputs.outcome }}
           VERIFY_CODEGEN_OUTPUT: ${{ steps.verify-codegen.outputs.output }}
         run: |
@@ -264,14 +192,6 @@ jobs:
           if [ "$LINT_TS_OUTCOME" = "failure" ]; then
             echo "::error title=TypeScript lint::ESLint/Prettier reported violations"
             echo "$LINT_TS_OUTPUT"
-          fi
-          if [ "$LINT_PROTO_OUTCOME" = "failure" ]; then
-            echo "::error title=Proto lint::buf lint reported violations"
-            echo "$LINT_PROTO_OUTPUT"
-          fi
-          if [ "$BUF_BREAKING_OUTCOME" = "failure" ]; then
-            echo "::error title=Proto breaking change::buf breaking detected backward-incompatible changes"
-            echo "$BUF_BREAKING_OUTPUT"
           fi
           if [ "$VERIFY_CODEGEN_OUTCOME" = "failure" ]; then
             echo "::error title=Codegen not committed::Generated code is stale — run 'task generate' and commit the result"
@@ -358,9 +278,9 @@ jobs:
         run: task test:int
         working-directory: backend
 
-  # ── Test (TypeScript) ───────────────────────────────────────────────────────
-  test-ts:
-    name: Test (TypeScript)
+  # ── Test (vault-js) ────────────────────────────────────────────────────────
+  test-vault:
+    name: Test (vault-js)
     runs-on: ubuntu-latest
 
     steps:
@@ -380,12 +300,12 @@ jobs:
         with:
           node-version: lts/*
           cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          cache-dependency-path: vault-js/pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        working-directory: frontend
+        working-directory: vault-js
 
-      - name: Run TypeScript tests
-        run: task test:ts
-        working-directory: frontend
+      - name: Run vault-js tests
+        run: task test:vault
+        working-directory: vault-js

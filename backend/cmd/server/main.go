@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
@@ -14,9 +16,11 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 
-	rpc "github.com/jack-fin/bartering-games/backend/gen/bartering/v1/barteringv1connect"
-	"github.com/jack-fin/bartering-games/backend/internal/handler"
+	"github.com/jack-fin/bartering-games/backend/internal/components/pages"
 )
+
+//go:embed static
+var staticFS embed.FS
 
 func main() {
 	port := envOr("PORT", "8080")
@@ -39,9 +43,24 @@ func main() {
 		MaxAge:           300,
 	}))
 
-	healthPath, healthHandler := rpc.NewHealthServiceHandler(&handler.HealthHandler{})
-	r.Mount(healthPath, healthHandler)
+	// Static assets (CSS, JS, vendor scripts)
+	staticContent, _ := fs.Sub(staticFS, "static")
+	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServerFS(staticContent)))
 
+	// Page routes
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		if err := pages.Home().Render(r.Context(), w); err != nil {
+			slog.Error("render error", "page", "home", "error", err)
+		}
+	})
+
+	r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
+		if err := pages.Login().Render(r.Context(), w); err != nil {
+			slog.Error("render error", "page", "login", "error", err)
+		}
+	})
+
+	// Health and readiness
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = fmt.Fprint(w, "ok")

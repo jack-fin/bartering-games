@@ -14,26 +14,13 @@ pre-commit:
       stage_fixed: true
 
     lint-ts-eslint:
-      glob: "frontend/**/*.{ts,svelte}"
-      root: "frontend"
+      glob: "vault-js/**/*.ts"
+      root: "vault-js"
       run: pnpm eslint --fix {staged_files}
       stage_fixed: true
 
     lint-ts-prettier:
-      glob: "frontend/**/*.{ts,svelte,json}"
-      root: "frontend"
+      glob: "vault-js/**/*.{ts,json}"
+      root: "vault-js"
       run: pnpm prettier --write {staged_files}
       stage_fixed: true
-
-    lint-proto:
-      glob: "proto/**/*.proto"
-      root: "proto"
-      # buf lint has no auto-fix — violations block the commit
-      run: buf lint
-
-    lint-proto-breaking:
-      glob: "proto/**/*.proto"
-      root: "proto"
-      # Checks for backward-incompatible changes against main.
-      # To bypass intentionally: LEFTHOOK_SKIP=lint-proto-breaking git commit
-      run: buf breaking --against '../.git#branch=main,subdir=proto'
