@@ -1,6 +1,8 @@
 ---
 paths:
-  - "backend/**/*"
+  - "cmd/**/*"
+  - "internal/**/*"
+  - "migrations/**/*"
 ---
 
 # Backend Standards

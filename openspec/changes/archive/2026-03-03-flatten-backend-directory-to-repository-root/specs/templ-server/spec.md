@@ -1,3 +1,5 @@
+## MODIFIED Requirements
+
 ### Requirement: templ dependency and code generation
 The project SHALL use `github.com/a-h/templ` as a dependency. Running `templ generate` from the repository root SHALL produce `_templ.go` files from `.templ` source files. Generated `_templ.go` files SHALL be committed to Git.
 
@@ -33,14 +35,6 @@ The project SHALL contain a layout component at `internal/components/layout.temp
 - **WHEN** the layout renders
 - **THEN** the `<head>` includes a `<script>` tag loading `/static/vault.js`
 
-### Requirement: Semantic HTML structure
-The layout SHALL use semantic HTML elements: `<header>` for navigation, `<main>` for page content, and `<footer>` for site footer.
-
-#### Scenario: Semantic elements present
-- **WHEN** any page renders using the layout
-- **THEN** the HTML contains `<header>`, `<main>`, and `<footer>` elements
-- **AND** the page content appears inside `<main>`
-
 ### Requirement: Navigation component
 The project SHALL contain a navigation component at `internal/components/nav.templ` that renders site navigation inside a `<nav>` element within the layout's `<header>`.
 
@@ -54,32 +48,6 @@ The project SHALL contain a footer component at `internal/components/footer.temp
 #### Scenario: Footer renders
 - **WHEN** the layout renders
 - **THEN** footer content is present inside `<footer>`
-
-### Requirement: CSS theming with light and dark mode
-The backend SHALL serve a CSS file from `/static/styles.css` that defines CSS custom properties for theming. The stylesheet SHALL support light and dark modes using `prefers-color-scheme` media queries.
-
-#### Scenario: Light mode by default
-- **WHEN** a user visits the site with system preference set to light mode
-- **THEN** the UI renders with light theme colors defined by CSS custom properties
-
-#### Scenario: Dark mode detection
-- **WHEN** a user visits the site with system preference set to dark mode
-- **THEN** the UI renders with dark theme colors defined by CSS custom properties
-
-#### Scenario: Theme tokens used consistently
-- **WHEN** a component needs a color value
-- **THEN** it references a CSS custom property (e.g., `var(--color-bg)`) rather than a hardcoded color
-
-### Requirement: Placeholder page components
-The backend SHALL contain templ page components for the home page and login page that use the base layout.
-
-#### Scenario: Home page renders
-- **WHEN** a user navigates to `/`
-- **THEN** the home page component renders inside the layout with placeholder content
-
-#### Scenario: Login page renders
-- **WHEN** a user navigates to `/login`
-- **THEN** the login page component renders inside the layout with placeholder content
 
 ### Requirement: Component directory structure
 templ components SHALL be organized under `internal/components/` with page-level components in a `pages/` subdirectory.

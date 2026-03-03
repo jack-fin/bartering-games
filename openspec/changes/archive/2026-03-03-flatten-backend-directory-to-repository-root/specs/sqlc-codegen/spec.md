@@ -1,3 +1,5 @@
+## MODIFIED Requirements
+
 ### Requirement: sqlc configuration file
 The project SHALL have a sqlc configuration file at `internal/storage/sqlc.yaml` that defines the PostgreSQL engine, pgx/v5 driver, query source directory, and Go code output directory.
 

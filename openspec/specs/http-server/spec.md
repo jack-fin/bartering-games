@@ -27,14 +27,12 @@ This requirement is superseded — Connect handlers are removed. All routes (tem
 - **WHEN** any HTTP request is received (page, static asset, or API)
 - **THEN** it passes through the full middleware stack before reaching the handler
 
-### Requirement: Server main uses rpc import alias
-The server entry point (`backend/cmd/server/main.go`) SHALL import the generated Connect package with the `rpc` alias, consistent with the project-wide convention.
+### Requirement: Server imports templ components
+The server entry point (`cmd/server/main.go`) SHALL import templ components from `github.com/jack-fin/bartering-games/internal/components/pages` (updated module path without `backend/` segment).
 
-This requirement is removed — there is no generated Connect package to import. The server entry point imports templ components directly.
-
-#### Scenario: Server imports templ components
+#### Scenario: Server imports use updated module path
 - **WHEN** `cmd/server/main.go` registers page routes
-- **THEN** it imports and renders templ components from `backend/internal/components/`
+- **THEN** it imports components from `github.com/jack-fin/bartering-games/internal/components/pages`
 
 ## ADDED Requirements
 
@@ -54,19 +52,23 @@ The server SHALL register Chi routes that render templ page components for `GET 
 - **THEN** the `Content-Type` header is `text/html; charset=utf-8`
 
 ### Requirement: Static asset route
-The server SHALL mount an `http.FileServer` at `/static/*` to serve CSS, JavaScript (HTMX, vault.js), and other static assets.
+The server SHALL mount an `http.FileServer` at `/static/*` to serve CSS, JavaScript (HTMX, vault.js), and other static assets. Vendored scripts are served from `/static/lib/` (renamed from `/static/vendor/`).
 
 #### Scenario: Static files are served
 - **WHEN** a client requests `/static/styles.css`
 - **THEN** the server returns the CSS file with appropriate `Content-Type`
 
-#### Scenario: Vendor scripts are served
-- **WHEN** a client requests `/static/vendor/htmx.min.js`
+#### Scenario: Lib scripts are served
+- **WHEN** a client requests `/static/lib/htmx.min.js`
 - **THEN** the server returns the HTMX JavaScript file
 
 #### Scenario: 404 for missing static files
 - **WHEN** a client requests `/static/nonexistent.js`
 - **THEN** the server responds with 404
+
+#### Scenario: Old vendor path returns 404
+- **WHEN** a client requests `/static/vendor/htmx.min.js`
+- **THEN** the server responds with 404 (path has moved to `/static/lib/`)
 
 ## REMOVED Requirements
 

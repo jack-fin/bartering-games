@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/jack-fin/bartering-games/backend/internal/components/pages"
+	"github.com/jack-fin/bartering-games/internal/components/pages"
 )
 
 func newTestRouter() *chi.Mux {

@@ -1,3 +1,5 @@
+## MODIFIED Requirements
+
 ### Requirement: Complete directory tree exists
 The repository SHALL contain the following directory tree for the monorepo:
 - cmd/server/
@@ -22,3 +24,9 @@ The repository SHALL contain the following directory tree for the monorepo:
 - **WHEN** the flatten-backend change is applied
 - **THEN** every directory listed above SHALL exist at the repository root (no `backend/` prefix)
 - **AND** the `backend/` directory SHALL NOT exist
+
+## REMOVED Requirements
+
+### Requirement: Empty directories are preserved in Git
+**Reason**: All leaf directories now contain real source files; `.gitkeep` files were removed as real content was added per the project convention.
+**Migration**: No action needed — directories are preserved by their contents.

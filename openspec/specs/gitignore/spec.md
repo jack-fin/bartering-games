@@ -2,9 +2,9 @@
 The `.gitignore` at the repository root SHALL ignore Go build and test artifacts.
 
 #### Scenario: Go binaries and build output are ignored
-- **WHEN** a Go binary is built in `backend/`
-- **THEN** the binary SHALL be excluded from Git tracking
-- **AND** the `/backend/vendor/` directory SHALL be ignored (if vendoring is ever used)
+- **WHEN** a Go binary is built via `go build -o bin/server ./cmd/server/`
+- **THEN** the `bin/` directory at the repo root SHALL be excluded from Git tracking
+- **AND** the `vendor/` directory SHALL be ignored (Go vendoring; this also means `cmd/server/static/vendor/` would be ignored, which is why it was renamed to `lib/`)
 
 ### Requirement: Root .gitignore covers Node/TypeScript artifacts
 The `.gitignore` SHALL ignore Node.js and TypeScript build artifacts.

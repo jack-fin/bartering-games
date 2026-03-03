@@ -20,7 +20,7 @@ jobs:
 
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version-file: backend/go.mod
+          go-version-file: go.mod
           cache: false  # golangci-lint-action manages its own cache
 
       - name: Install Task
@@ -42,7 +42,6 @@ jobs:
         continue-on-error: true
         uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
-          working-directory: backend
           version: v2.10.1
           install-mode: binary
 
@@ -236,7 +235,7 @@ jobs:
 
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version-file: backend/go.mod
+          go-version-file: go.mod
 
       - name: Install Task
         uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
@@ -248,7 +247,7 @@ jobs:
         uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         with:
           path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('backend/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
@@ -272,11 +271,9 @@ jobs:
 
       - name: Run unit tests
         run: task test:go
-        working-directory: backend
 
       - name: Run integration tests
         run: task test:int
-        working-directory: backend
 
   # ── Test (vault-js) ────────────────────────────────────────────────────────
   test-vault:
@@ -308,4 +305,3 @@ jobs:
 
       - name: Run vault-js tests
         run: task test:vault
-        working-directory: vault-js

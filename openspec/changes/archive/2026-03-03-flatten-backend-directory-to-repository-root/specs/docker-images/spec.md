@@ -30,9 +30,3 @@ The repository SHALL contain a `Dockerfile` at the repository root (not `backend
 #### Scenario: Static assets are served from the image
 - **WHEN** a container is started and a client requests `/static/styles.css`
 - **THEN** the Go binary serves the embedded static asset without requiring files on the filesystem
-
-## REMOVED Requirements
-
-### Requirement: Frontend Dockerfile exists
-**Reason**: The SvelteKit frontend is removed. The Go binary serves HTML and static assets directly. There is no separate frontend image.
-**Migration**: All frontend concerns (HTML rendering, CSS, JavaScript) are handled by the Go server with templ components and embedded static assets.

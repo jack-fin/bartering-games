@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --format=iife --global-name=Vault --outfile=../backend/cmd/server/static/vault.js --target=es2022",
+    "build": "esbuild src/index.ts --bundle --format=iife --global-name=Vault --outfile=../cmd/server/static/vault.js --target=es2022",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && prettier --check .",
     "lint:fix": "eslint --fix . && prettier --write .",

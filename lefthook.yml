@@ -5,9 +5,8 @@ pre-commit:
   parallel: true
   commands:
     lint-go:
-      glob: "backend/**/*.go"
-      root: "backend"
-      # Runs the full backend rather than staged files only. golangci-lint works on
+      glob: "**/*.go"
+      # Runs the full project rather than staged files only. golangci-lint works on
       # packages and may miss cross-file violations with per-file scoping.
       # To scope to staged files instead: run: golangci-lint run --fix {staged_files}
       run: golangci-lint run --fix ./...

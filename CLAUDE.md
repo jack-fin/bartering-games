@@ -14,7 +14,7 @@ Domain: bartering.games
 
 ## Repository Structure
 
-Monorepo layout:
+Repository layout:
 ```
 bartering-games/
 ├── CLAUDE.md
@@ -24,29 +24,30 @@ bartering-games/
 │   ├── src/                # TypeScript source (index.ts, htmx-interception.ts)
 │   ├── package.json        # pnpm, esbuild + vitest devDeps, zero runtime deps
 │   └── vitest.config.ts
-├── backend/                # Go server (HTML + API + background workers)
-│   ├── cmd/server/
-│   │   ├── main.go         # Server entry point
-│   │   └── static/         # Embedded static assets (CSS, JS, vendor)
-│   │       ├── styles.css
-│   │       ├── vault.js    # Compiled vault-js output (esbuild IIFE)
-│   │       └── vendor/     # Vendored HTMX + extensions
-│   ├── internal/
-│   │   ├── components/     # templ components (layout, nav, footer)
-│   │   │   └── pages/      # Page-level templ components (home, login)
-│   │   ├── service/        # Business logic
-│   │   ├── port/           # Interface definitions (adapters pattern)
-│   │   ├── adapter/        # Platform implementations (steam/, igdb/, itad/, manual/)
-│   │   ├── storage/        # sqlc queries + generated code
-│   │   │   ├── sqlc.yaml
-│   │   │   ├── query/      # Hand-written SQL
-│   │   │   └── db/         # Generated Go (sqlc output)
-│   │   ├── worker/         # Background sync goroutines
-│   │   └── crypto/         # Server-side crypto utilities
-│   ├── migrations/         # Atlas versioned migration files
-│   ├── schema.hcl          # Declarative DB schema (Atlas source of truth)
-│   ├── atlas.hcl           # Atlas CLI config (envs, dev database)
-│   └── Dockerfile
+├── cmd/server/
+│   ├── main.go             # Server entry point
+│   └── static/             # Embedded static assets (CSS, JS, lib)
+│       ├── styles.css
+│       ├── vault.js        # Compiled vault-js output (esbuild IIFE)
+│       └── lib/            # Vendored HTMX + extensions
+├── internal/
+│   ├── components/         # templ components (layout, nav, footer)
+│   │   └── pages/          # Page-level templ components (home, login)
+│   ├── service/            # Business logic
+│   ├── port/               # Interface definitions (adapters pattern)
+│   ├── adapter/            # Platform implementations (steam/, igdb/, itad/, manual/)
+│   ├── storage/            # sqlc queries + generated code
+│   │   ├── sqlc.yaml
+│   │   ├── query/          # Hand-written SQL
+│   │   └── db/             # Generated Go (sqlc output)
+│   ├── worker/             # Background sync goroutines
+│   └── crypto/             # Server-side crypto utilities
+├── migrations/             # Atlas versioned migration files
+├── schema.hcl              # Declarative DB schema (Atlas source of truth)
+├── atlas.hcl               # Atlas CLI config (envs, dev database)
+├── Dockerfile
+├── go.mod
+├── go.sum
 ├── docker-compose.yaml     # Local dev (Postgres, Prometheus, Grafana, Loki)
 ├── Taskfile.yaml           # Task runner (use `task` not `make`)
 └── .github/workflows/      # CI (lint, test-go, test-vault, openspec check)
@@ -54,10 +55,10 @@ bartering-games/
 
 ## Build Output
 
-- Go binaries go in `backend/bin/` (gitignored). Always use `go build -o bin/ ./cmd/...`
+- Go binaries go in `bin/` (gitignored). Always use `go build -o bin/ ./cmd/...`
   when compiling manually. Never run `go build` without `-o bin/` — bare `go build`
   drops binaries in the source tree.
-- Vault JS output goes to `backend/cmd/server/static/vault.js` (compiled by esbuild from `vault-js/src/`).
+- Vault JS output goes to `cmd/server/static/vault.js` (compiled by esbuild from `vault-js/src/`).
 
 ## Code Style & Conventions
 
@@ -78,7 +79,7 @@ task test:e2e        # Playwright browser tests
 task generate        # Run all codegen (templ generate + sqlc generate)
 task generate:templ  # templ generate only
 task generate:sqlc   # sqlc generate only
-task build:vault     # Compile vault-js TypeScript → backend/cmd/server/static/vault.js
+task build:vault     # Compile vault-js TypeScript → cmd/server/static/vault.js
 task migrate         # Run Atlas migrations
 task migrate:diff    # Generate migration from schema.hcl diff (usage: task migrate:diff -- <name>)
 task dev             # Start local dev environment (docker-compose up)
@@ -112,7 +113,7 @@ directly asks for it.
 
 ## Testing
 
-- **Go unit tests**: `go test ./...` in `backend/`
+- **Go unit tests**: `go test ./...` from repo root
 - **Go integration tests**: `go test -tags=integration ./...` (uses testcontainers for real Postgres)
 - **vault-js unit tests**: Vitest in `vault-js/`
 - **Browser E2E**: Playwright (multi-context for two-user trade flows)
@@ -142,7 +143,7 @@ directly asks for it.
 ## Docker
 
 - The backend runtime image uses `gcr.io/distroless/static-debian12:nonroot` — no shell, no package manager, runs as UID 65532. For local debugging (`docker exec`), swap to `gcr.io/distroless/static-debian12:debug` which includes busybox.
-- Single Docker image: the Go binary embeds static assets (CSS, JS, vendor scripts) via `//go:embed`. No separate frontend image.
+- Single Docker image: the Go binary embeds static assets (CSS, JS, lib scripts) via `//go:embed`. No separate frontend image.
 - Build the image with `task docker:build`.
 
 ## Architecture Patterns
@@ -160,7 +161,7 @@ directly asks for it.
   enrichment, bundle data. Heartbeat table for monitoring.
 - **Server-side sessions**: Hashed tokens in Postgres, HttpOnly cookies. No JWTs.
   Session lookup per request (~0.2ms). Instant revocation on logout/compromise.
-- **Generated code checked into Git**: templ (`_templ.go`), sqlc (`backend/internal/storage/db/`),
-  and vault-js (`backend/cmd/server/static/vault.js`) output is committed. CI verifies codegen is committed.
+- **Generated code checked into Git**: templ (`_templ.go`), sqlc (`internal/storage/db/`),
+  and vault-js (`cmd/server/static/vault.js`) output is committed. CI verifies codegen is committed.
 - **Housekeeping**: Remove `.gitkeep` placeholder files from directories once real
   content is added.

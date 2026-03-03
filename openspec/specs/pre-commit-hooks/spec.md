@@ -8,11 +8,11 @@ The repo SHALL contain a `lefthook.yml` file at the repository root that configu
 - **THEN** `lefthook.yml` exists at the repo root and is tracked in git
 
 ### Requirement: Pre-commit runs golangci-lint on staged Go files
-The pre-commit hook SHALL run `golangci-lint run` against staged `.go` files only.
+The pre-commit hook SHALL run `golangci-lint run` against staged `.go` files only. The glob and root SHALL target the repository root, not `backend/`.
 
 #### Scenario: Go files staged
 - **WHEN** one or more `.go` files are staged and the developer runs `git commit`
-- **THEN** `golangci-lint run` executes against only those staged files
+- **THEN** `golangci-lint run` executes with `glob: "**/*.go"` and `root: "."` (not `backend/`)
 
 #### Scenario: No Go files staged
 - **WHEN** no `.go` files are staged and the developer runs `git commit`
