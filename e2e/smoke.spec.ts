@@ -16,11 +16,4 @@ test.describe("smoke", () => {
     expect(response.status()).toBe(200);
     expect(await response.text()).toBe("ok");
   });
-
-  test("TEMP: deliberately failing test to verify CI artifact upload", async ({
-    page,
-  }) => {
-    await page.goto("/");
-    await expect(page.locator("h1")).toHaveText("this will never match");
-  });
 });
