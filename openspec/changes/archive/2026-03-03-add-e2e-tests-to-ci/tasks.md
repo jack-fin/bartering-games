@@ -20,4 +20,4 @@
 ## 3. Verify and Test
 
 - [x] 3.1 Run `task test:e2e` locally to verify the Playwright config change doesn't break local dev
-- [ ] 3.2 Push branch and verify the `test-e2e` job passes in CI
+- [x] 3.2 Push branch and verify the `test-e2e` job passes in CI
