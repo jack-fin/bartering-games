@@ -147,7 +147,7 @@ directly asks for it.
 ## Docker
 
 - The backend runtime image uses `gcr.io/distroless/static-debian12:nonroot` — no shell, no package manager, runs as UID 65532. For local debugging (`docker exec`), swap to `gcr.io/distroless/static-debian12:debug` which includes busybox.
-- The frontend runtime image uses `node:22-alpine` running as the `node` user.
+- The frontend runtime image uses `nginx:alpine` serving the SvelteKit static build. pnpm and Node.js are build-stage only. nginx worker processes (which serve traffic) run as the `nginx` user (non-root).
 - Build both images locally with `task docker:build`.
 
 ## Architecture Patterns

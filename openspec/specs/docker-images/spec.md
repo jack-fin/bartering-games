@@ -24,7 +24,7 @@ The repository SHALL contain a `backend/Dockerfile` that produces a production-r
 - **THEN** it SHALL have a `HEALTHCHECK` instruction targeting the `/healthz` endpoint
 
 ### Requirement: Frontend Dockerfile exists
-The repository SHALL contain a `frontend/Dockerfile` that produces a production-ready container image for the SvelteKit adapter-node server.
+The repository SHALL contain a `frontend/Dockerfile` that produces a production-ready container image serving the SvelteKit static build via nginx.
 
 #### Scenario: Frontend image builds successfully
 - **WHEN** a developer runs `docker build -t bartering-frontend ./frontend`
@@ -32,15 +32,15 @@ The repository SHALL contain a `frontend/Dockerfile` that produces a production-
 
 #### Scenario: Frontend image uses multi-stage build
 - **WHEN** the frontend image is built
-- **THEN** the final image SHALL NOT contain pnpm, build tooling, or raw source files
+- **THEN** the final image SHALL NOT contain pnpm, build tooling, Node.js, or raw source files
 
 #### Scenario: Frontend dependencies installed with frozen lockfile
 - **WHEN** the frontend build stage runs
 - **THEN** pnpm SHALL be invoked with `--frozen-lockfile` to ensure reproducible installs
 
-#### Scenario: Frontend runs as non-root
+#### Scenario: Frontend traffic served by non-root process
 - **WHEN** a container is started from the frontend image
-- **THEN** the process SHALL run as a non-root user (UID != 0)
+- **THEN** nginx worker processes (which serve HTTP traffic) SHALL run as the `nginx` user (non-root)
 
 #### Scenario: Frontend image declares a health check
 - **WHEN** the frontend image is inspected

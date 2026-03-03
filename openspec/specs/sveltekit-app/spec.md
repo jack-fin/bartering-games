@@ -11,12 +11,12 @@ The frontend SHALL be a SvelteKit project using Svelte 5, TypeScript, and pnpm, 
 - **WHEN** a developer runs `pnpm install` from the `frontend/` directory
 - **THEN** all dependencies install successfully
 
-### Requirement: adapter-node configuration
-The SvelteKit project SHALL use `@sveltejs/adapter-node` in `svelte.config.js` for Docker deployment.
+### Requirement: adapter-static configuration
+The SvelteKit project SHALL use `@sveltejs/adapter-static` in `svelte.config.js` with `fallback: "index.html"` for SPA deployment.
 
-#### Scenario: Build produces Node.js server output
+#### Scenario: Build produces static file output
 - **WHEN** the project is built with `pnpm build`
-- **THEN** the output is a standalone Node.js server suitable for container deployment
+- **THEN** the output is a directory of static files (HTML, JS, CSS) suitable for serving from any static file server
 
 ### Requirement: ESLint and Prettier linting and formatting
 The frontend SHALL use ESLint with eslint-plugin-svelte for linting and Prettier with prettier-plugin-svelte for formatting.
